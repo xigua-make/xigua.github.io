@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼豆图纸生成器-西瓜制作</title>
+    <style>
+        /* --- Global Styles & Variables --- */
+        :root {
+            --primary-color: #4A90E2;
+            --primary-hover: #357ABD;
+            --accent-color: #F5A623;
+            --bg-primary: #F7F9FC;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #2C3E50;
+            --text-secondary: #7F8C8D;
+            --border-color: #E0E6ED;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+            --radius: 12px;
+            --sidebar-width: 380px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            background-color: var(--bg-primary); 
+            color: var(--text-primary); 
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        h1, h2, h3 { font-weight: 700; }
+        button { cursor: pointer; border: none; border-radius: 8px; transition: all 0.2s ease-in-out; }
+        .btn { padding: 0.8rem 1.4rem; font-size: 1rem; font-weight: 600; }
+        .btn-primary { background: var(--primary-color); color: white; box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-secondary { background: var(--text-secondary); color: white; }
+        .btn-icon { background: transparent; color: var(--text-primary); font-size: 1.2rem; padding: 0.6rem; border-radius: 8px; width: 40px; height: 40px; border: 1px solid var(--border-color); }
+        .btn-icon:hover { background: var(--bg-primary); }
+        .btn-icon.active { background: var(--primary-color); color: white; }
+        .btn-zoom { background: var(--primary-color); color: white; padding: 0.6rem 1rem; margin: 0 0.3rem; border-radius: 6px; }
+        .btn-zoom:hover { background: var(--primary-hover); }
+        
+        /* --- Activation Screen --- */
+        .activation-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; justify-content: center; align-items: center; z-index: 10000;
+        }
+        .activation-card {
+            background: white; border-radius: var(--radius); padding: 3.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 420px; width: 90%;
+            text-align: center;
+        }
+        .activation-card h2 { margin-bottom: 2rem; color: var(--primary-color); font-size: 1.8rem; }
+        .activation-input {
+            width: 100%; padding: 1.2rem; border: 2px solid var(--border-color);
+            border-radius: 8px; font-size: 1.1rem; margin-bottom: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        .activation-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1); }
+        .activation-error {
+            color: #e74c3c; font-size: 0.95rem; margin-bottom: 1.5rem;
+            display: none; padding: 0.8rem; background: rgba(231, 76, 60, 0.1); border-radius: 6px;
+        }
+        .activation-success {
+            color: #27ae60; font-size: 0.95rem; margin-bottom: 1.5rem;
+            display: none; padding: 0.8rem; background: rgba(39, 174, 96, 0.1); border-radius: 6px;
+        }
+        .activation-info {
+            font-size: 0.9rem; color: var(--text-secondary);
+            margin-top: 2rem; line-height: 1.6;
+        }
+        
+        /* --- Layout --- */
+        .app-container { display: grid; grid-template-columns: var(--sidebar-width) 1fr; height: 100vh; display: none; }
+        .sidebar { 
+            background: var(--bg-secondary); 
+            border-right: 1px solid var(--border-color); 
+            padding: 2rem; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .main-content { display: flex; flex-direction: column; overflow: hidden; }
+        .header { 
+            padding: 1.2rem 2rem; 
+            background: var(--bg-secondary); 
+            border-bottom: 1px solid var(--border-color); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .workspace { 
+            flex-grow: 1; 
+            padding: 2rem; 
+            overflow: auto; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            position: relative;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        /* --- Components --- */
+        .control-section { 
+            margin-bottom: 2rem; 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 2rem; 
+        }
+        .control-section:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+        .control-title { 
+            font-size: 1.2rem; 
+            font-weight: 600; 
+            margin-bottom: 1.2rem; 
+            color: var(--text-primary);
+            display: flex; align-items: center;
+        }
+        .control-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--primary-color);
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        .upload-area {
+            border: 2px dashed var(--primary-color); 
+            border-radius: var(--radius); 
+            padding: 2.5rem;
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            background: rgba(74, 144, 226, 0.02);
+        }
+        .upload-area:hover, .upload-area.dragover { 
+            background: rgba(74, 144, 226, 0.08); 
+            border-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+        #file-input { display: none; }
+        .preset-buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+        .preset-btn { 
+            padding: 0.6rem 1rem; 
+            border: 1px solid var(--border-color); 
+            background: var(--bg-primary); 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 0.9rem; 
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .preset-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .preset-btn.active { 
+            background: var(--primary-color); 
+            color: white; 
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        .custom-color-grid {
+            display: grid; 
+            grid-template-columns: repeat(12, 1fr); 
+            gap: 6px; 
+            max-height: 220px; 
+            overflow-y: auto;
+            border: 1px solid var(--border-color); 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-top: 1.2rem;
+        }
+        .color-swatch {
+            width: 22px; 
+            height: 22px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            border: 1px solid #eee; 
+            transition: all 0.2s;
+            position: relative;
+        }
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+        .color-swatch.active { 
+            box-shadow: 0 0 0 3px var(--primary-color); 
+            transform: scale(1.15);
+        }
+        .color-swatch span {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .color-swatch:hover span {
+            opacity: 1;
+        }
+        
+        /* --- Enhanced Controls --- */
+        .granularity-control {
+            margin-bottom: 1rem;
+        }
+        .granularity-slider {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+        .granularity-value {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        .excluded-colors {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .excluded-color-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.6rem;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .excluded-color-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+        .remove-exclusion {
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+        .remove-exclusion:hover {
+            color: var(--primary-color);
+        }
+        
+        .slider-group { margin-top: 1.2rem; }
+        .slider-group label { display: block; font-size: 0.95rem; margin-bottom: 0.6rem; color: var(--text-secondary); }
+        .slider-group input { width: 100%; }
+        
+        /* --- Enhanced Size Inputs --- */
+        .size-inputs { 
+            display: grid; 
+            grid-template-columns: 1fr auto 1fr; 
+            gap: 1rem; 
+            align-items: center;
+        }
+        .size-inputs input { 
+            flex: 1; 
+            padding: 0.8rem 1rem; 
+            border: 2px solid var(--border-color); 
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .size-inputs input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+        .size-inputs .separator {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .size-inputs .label {
+            position: absolute;
+            top: -8px;
+            left: 12px;
+            background: var(--bg-secondary);
+            padding: 0 4px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; }
+        .checkbox-group label { 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer; 
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .checkbox-group label:hover {
+            color: var(--primary-color);
+        }
+        .checkbox-group input[type="checkbox"] { 
+            margin-right: 0.6rem; 
+            width: 18px; 
+            height: 18px;
+            cursor: pointer;
+        }
+        .zoom-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            margin-top: 1rem;
+            background: var(--bg-primary);
+            padding: 0.8rem;
+            border-radius: 8px;
+        }
+        .zoom-value { 
+            font-weight: 600; 
+            min-width: 60px; 
+            text-align: center;
+            font-size: 1rem;
+        }
+        
+        /* --- Canvas & Preview --- */
+        .canvas-container { 
+            position: relative; 
+            box-shadow: var(--shadow-lg); 
+            border-radius: var(--radius); 
+            background: #fff;
+            padding: 25px;
+            display: inline-block;
+            margin: 20px 0;
+            max-width: 100%;
+            overflow: auto;
+        }
+        #pattern-canvas { 
+            display: block; 
+            border-radius: var(--radius); 
+            cursor: crosshair; 
+            image-rendering: pixelated; 
+            image-rendering: -moz-crisp-edges; 
+            image-rendering: crisp-edges;
+        }
+        .tooltip {
+            position: absolute; 
+            background: rgba(0, 0, 0, 0.95); 
+            color: white; 
+            padding: 12px 16px; 
+            border-radius: 8px;
+            font-size: 0.9rem; 
+            pointer-events: none; 
+            z-index: 1000; 
+            white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        .mobile-coords {
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            background: rgba(0,0,0,0.85); 
+            color: white;
+            padding: 16px 20px; 
+            border-radius: 12px; 
+            font-size: 0.9rem; 
+            display: none; 
+            z-index: 1001;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .coordinate-display {
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98); 
+            padding: 20px 24px; 
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15); 
+            z-index: 1002; 
+            display: none;
+            border: 2px solid var(--primary-color);
+            backdrop-filter: blur(10px);
+        }
+        .coordinate-display h4 { margin-bottom: 12px; color: var(--primary-color); font-size: 1.1rem; }
+        .coordinate-display p { margin: 6px 0; font-size: 0.95rem; }
+        .color-preview { 
+            display: inline-block; 
+            width: 24px; 
+            height: 24px; 
+            border-radius: 4px; 
+            vertical-align: middle; 
+            margin-left: 8px; 
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- Color Picker Modal --- */
+        .color-picker-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1003;
+        }
+        .color-picker-content {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .color-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .color-picker-header h3 {
+            color: var(--primary-color);
+        }
+        .color-picker-close {
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .color-picker-close:hover {
+            background: var(--bg-primary);
+        }
+        .color-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 12px;
+        }
+        .color-picker-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .color-picker-item:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .color-picker-item.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        .color-picker-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .color-picker-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* --- Shopping List --- */
+        .shopping-list {
+            position: fixed; 
+            bottom: 30px; 
+            left: var(--sidebar-width); 
+            right: 30px;
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: var(--radius); 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            padding: 1.5rem; 
+            transform: translateY(calc(100% + 60px)); 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999; 
+            max-height: 45vh; 
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+        .shopping-list.visible { transform: translateY(0); }
+        .shopping-list h3 { 
+            font-size: 1.1rem; 
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        .list-items { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            gap: 1rem; 
+        }
+        .list-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.8rem; 
+            font-size: 0.85rem; 
+            padding: 8px; 
+            background: var(--bg-primary); 
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .list-swatch { 
+            width: 20px; 
+            height: 20px; 
+            border-radius: 4px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- Header with Copyright --- */
+        .header h1 {
+            font-size: 1.6rem; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-start;
+        }
+        .header .subtitle {
+            font-size: 0.8rem; 
+            color: var(--text-secondary);
+            font-weight: normal; 
+            margin-top: 6px;
+            max-width: 400px; 
+            line-height: 1.3;
+            opacity: 0.8;
+        }
+
+        /* --- Button Group --- */
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        /* --- Status Display --- */
+        .status-display {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        .status-label {
+            color: var(--text-secondary);
+        }
+        .status-value {
+            font-weight: 600;
+        }
+
+        /* --- Progress Bar --- */
+        .progress-container {
+            margin-top: 1rem;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* --- Responsiveness --- */
+        @media (max-width: 1024px) {
+            :root { --sidebar-width: 300px; }
+            .sidebar { 
+                position: fixed; 
+                left: 0; 
+                top: 0; 
+                bottom: 0; 
+                transform: translateX(-100%); 
+                z-index: 1002; 
+                transition: transform 0.3s ease; 
+                width: 300px;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-coords { display: block; }
+            .shopping-list { 
+                left: 20px; 
+                right: 20px;
+                bottom: 20px;
+            }
+            .header h1 { font-size: 1.3rem; }
+            .header .subtitle { max-width: 250px; font-size: 0.75rem; }
+            .workspace { padding: 1rem; }
+            .canvas-container {
+                padding: 15px;
+                margin: 10px 0;
+            }
+            .color-picker-content {
+                max-width: 95%;
+                padding: 1.5rem;
+            }
+            .color-picker-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 8px;
+            }
+            .color-picker-item {
+                width: 50px;
+                height: 50px;
+            }
+            .color-picker-color {
+                width: 35px;
+                height: 35px;
+            }
+            .color-picker-label {
+                font-size: 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-container { 
+                grid-template-columns: 1fr; 
+                grid-template-rows: auto 1fr; 
+            }
+            .main-content { 
+                grid-row: 1 / -1; 
+            }
+            .checkbox-group { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 0.8rem;
+            }
+            .size-inputs {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .size-inputs .separator {
+                display: none;
+            }
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .header .subtitle {
+                font-size: 0.7rem;
+            }
+            .button-group {
+                margin-top: 0.5rem;
+            }
+            .preset-buttons {
+                gap: 0.4rem;
+            }
+            .preset-btn {
+                font-size: 0.8rem;
+                padding: 0.5rem 0.8rem;
+            }
+            .zoom-controls {
+                flex-wrap: wrap;
+                gap: 0.3rem;
+            }
+            .btn-zoom {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            .color-picker-grid {
+                grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+                gap: 6px;
+            }
+            .color-picker-item {
+                width: 45px;
+                height: 45px;
+            }
+            .color-picker-color {
+                width: 30px;
+                height: 30px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            :root { --sidebar-width: 280px; }
+            .sidebar { width: 280px; }
+            .control-section {
+                margin-bottom: 1.5rem;
+                padding-bottom: 1.5rem;
+            }
+            .control-title {
+                font-size: 1.1rem;
+            }
+            .upload-area {
+                padding: 1.5rem;
+            }
+            .btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .sidebar {
+                padding: 1.5rem;
+            }
+            .canvas-container {
+                padding: 10px;
+            }
+            .color-picker-grid {
+                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            }
+            .color-picker-item {
+                width: 40px;
+                height: 40px;
+            }
+            .color-picker-color {
+                width: 25px;
+                height: 25px;
+            }
+            .color-picker-label {
+                font-size: 9px;
+            }
+        }
+
+        /* Touch-friendly styles for mobile */
+        @media (pointer: coarse) {
+            .btn-icon {
+                min-width: 44px;
+                min-height: 44px;
+            }
+            .preset-btn {
+                padding: 0.8rem 1rem;
+            }
+            .color-picker-item {
+                min-width: 50px;
+                min-height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Activation Screen -->
+<div class="activation-screen" id="activation-screen">
+    <div class="activation-card">
+        <h2>🔐 激活验证</h2>
+        <p style="margin-bottom: 2rem; color: var(--text-secondary); font-size: 1rem;">请输入激活码以使用拼豆图纸生成器</p>
+        <input type="password" class="activation-input" id="activation-code" placeholder="请输入激活码" maxlength="6">
+        <div class="activation-error" id="activation-error">激活码错误，请重新输入</div>
+        <div class="activation-success" id="activation-success">激活成功！正在进入...</div>
+        <button class="btn btn-primary" id="activate-btn" style="width: 100%;">激活使用</button>
+        <div class="activation-info">
+            如需获取激活码，请联系<br>
+            <strong>淘宝店铺：大师精品资料</strong>
+        </div>
+    </div>
+</div>
+
+<div class="app-container" id="app-container">
+    <!-- Control Panel Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="control-section">
+            <h3 class="control-title">📷 1. 上传图片</h3>
+            <div class="upload-area" id="upload-area">
+                <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">📁 点击或拖拽图片到此处</p>
+                <p style="font-size:0.9rem; color:var(--text-secondary);">支持 JPG, PNG, GIF 格式</p>
+                <input type="file" id="file-input" accept="image/*">
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3 class="control-title">🎨 2. 颜色预设</h3>
+            <div class="preset-buttons" id="preset-buttons"></div>
+            <div id="custom-color-section" style="display:none;">
+                <label style="font-size:0.95rem; font-weight: 500;">自定义颜色 (点击选择):</label>
+                <div class="custom-color-grid" id="custom-color-grid"></div>
+                <button class="btn btn-primary" id="save-custom-palette" style="margin-top:1.2rem; width:100%;">保存自定义色板</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3 class="control-title">📐 3. 图纸设置</h3>
+            <div class="granularity-control">
+                <label style="font-size:0.95rem; font-weight: 500;">网格粒度 (控制细节程度)</label>
+                <input type="range" id="granularity-slider" class="granularity-slider" min="10" max="200" value="64">
+                <div class="granularity-value">
+                    <span>粗糙</span>
+                    <span id="granularity-display">64 × 64</span>
+                    <span>精细</span>
+                </div>
+            </div>
+            <div class="size-inputs" style="position: relative;">
+                <div style="position: relative;">
+                    <span class="label">宽度</span>
+                    <input type="number" id="width-input" value="64" min="10" max="200" placeholder="宽度">
+                </div>
+                <span class="separator">×</span>
+                <div style="position: relative;">
+                    <span class="label">高度</span>
+                    <input type="number" id="height-input" value="64" min="10" max="200" placeholder="高度">
+                </div>
+            </div>
+            <div style="margin-top: 1rem;">
+                <label style="font-size:0.95rem; font-weight: 500;">相似度阈值 (控制颜色合并)</label>
+                <input type="range" id="similarity-threshold" min="10" max="100" value="30">
+                <div class="granularity-value">
+                    <span>低</span>
+                    <span id="threshold-display">30</span>
+                    <span>高</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="generate-btn" style="width:100%; margin-top:1.2rem;">✨ 生成图纸</button>
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">处理中...</div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3 class="control-title">🚫 4. 颜色排除</h3>
+            <div id="excluded-colors" class="excluded-colors"></div>
+        </div>
+
+        <div class="control-section">
+            <h3 class="control-title">⚙️ 5. 操作 & 下载</h3>
+            <div class="zoom-controls">
+                <span>缩放:</span>
+                <button class="btn-zoom" id="zoom-out">－</button>
+                <span class="zoom-value" id="zoom-value">100%</span>
+                <button class="btn-zoom" id="zoom-in">＋</button>
+                <button class="btn-zoom" id="zoom-reset">⟲</button>
+            </div>
+            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                <button class="btn btn-primary" id="download-btn" style="width:100%;">💾 下载高清图纸</button>
+                <button class="btn btn-secondary" id="download-stats-btn" style="width:100%;">📊 下载统计图</button>
+                <button class="btn btn-secondary" id="toggle-list-btn" style="width:100%;">📦 查看材料清单</button>
+            </div>
+            <div class="status-display">
+                <div class="status-item">
+                    <span class="status-label">处理模式:</span>
+                    <span class="status-value" id="processing-mode">未处理</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">区域合并:</span>
+                    <span class="status-value" id="merged-regions">0个区域</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">背景移除:</span>
+                    <span class="status-value" id="background-removed">未执行</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <header class="header">
+            <button class="btn-icon" id="menu-toggle" style="display:none;">☰</button>
+            <h1>
+                拼豆图纸生成器-西瓜制作
+                <span class="subtitle">目前仅授权于淘宝店铺：大师精品资料 版权均已登记 如有发现倒卖者，请联系我们 淘宝店铺：大师精品资料 会按照起诉赔偿的百分之30对提供线索者进行补偿</span>
+            </h1>
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="show-grid" checked>
+                    <span>显示网格</span>
+                </label>
+                <label>
+                    <input type="checkbox" id="show-coords" checked>
+                    <span>显示坐标</span>
+                </label>
+                <label>
+                    <input type="checkbox" id="show-colors" checked>
+                    <span>显示色号</span>
+                </label>
+                <label>
+                    <input type="checkbox" id="show-background" checked>
+                    <span>显示背景</span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-icon" id="highlight-btn" title="高亮相同颜色">🔆</button>
+                <button class="btn-icon" id="hide-btn" title="隐藏相同颜色">👁️</button>
+                <button class="btn-icon" id="clear-highlight-btn" title="清除高亮和隐藏">🔄</button>
+            </div>
+        </header>
+        <div class="workspace" id="workspace">
+             <p style="color: var(--text-secondary); font-size: 1.1rem;">请上传图片以开始创建您的专属拼豆图纸。</p>
+        </div>
+    </main>
+</div>
+
+<!-- Floating Elements -->
+<div class="tooltip" id="tooltip" style="display:none;"></div>
+<div class="mobile-coords" id="mobile-coords" style="display:none;"></div>
+<div class="coordinate-display" id="coordinate-display">
+    <h4>🎨 珠子信息</h4>
+    <p>位置: <span id="coord-position"></span></p>
+    <p>坐标: <span id="coord-alphabet"></span></p>
+    <p>色号: <span id="coord-color"></span></p>
+    <p>颜色: <span id="coord-hex"></span><span class="color-preview" id="coord-preview"></span></p>
+    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+        <button class="btn btn-primary" id="replace-color-btn" style="flex: 1;">更换颜色</button>
+    </div>
+</div>
+<div class="shopping-list" id="shopping-list">
+    <h3>📦 材料清单</h3>
+    <div class="list-items" id="list-items"></div>
+</div>
+
+<!-- Color Picker Modal -->
+<div class="color-picker-modal" id="color-picker-modal">
+    <div class="color-picker-content">
+        <div class="color-picker-header">
+            <h3>选择新颜色</h3>
+            <button class="color-picker-close" id="color-picker-close">×</button>
+        </div>
+        <div class="color-picker-grid" id="color-picker-grid"></div>
+    </div>
+</div>
+
+<script>
+// --- Activation System ---
+const CORRECT_CODE = '778240';
+
+// 激活函数
+function activateApp() {
+    const input = document.getElementById('activation-code');
+    const errorDiv = document.getElementById('activation-error');
+    const successDiv = document.getElementById('activation-success');
+    const activateBtn = document.getElementById('activate-btn');
+    
+    const inputValue = input.value ? input.value.trim() : '';
+    
+    console.log('尝试激活，输入值:', inputValue);
+    
+    if (!inputValue) {
+        errorDiv.textContent = '请输入激活码';
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 3000);
+        return;
+    }
+    
+    if (inputValue === CORRECT_CODE) {
+        console.log('激活成功');
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'block';
+        activateBtn.disabled = true;
+        activateBtn.textContent = '激活成功';
+        
+        setTimeout(() => {
+            document.getElementById('activation-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'grid';
+            sessionStorage.setItem('activated', 'true');
+            sessionStorage.setItem('activation_time', new Date().toISOString());
+        }, 1000);
+    } else {
+        console.log('激活失败，错误的激活码');
+        errorDiv.textContent = `激活码错误，请重新输入 (${inputValue.length}位)`;
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+        input.value = '';
+        input.focus();
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// 绑定激活按钮点击事件
+document.addEventListener('DOMContentLoaded', function() {
+    const activateBtn = document.getElementById('activate-btn');
+    if (activateBtn) {
+        activateBtn.onclick = activateApp;
+    }
+    
+    // 绑定回车键
+    const activationInput = document.getElementById('activation-code');
+    if (activationInput) {
+        activationInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                activateApp();
+            }
+        });
+        
+        // 自动聚焦
+        activationInput.focus();
+    }
+});
+
+// 检查是否已经激活
+if (sessionStorage.getItem('activated') === 'true') {
+    console.log('用户已激活，直接进入主应用');
+    document.getElementById('activation-screen').style.display = 'none';
+    document.getElementById('app-container').style.display = 'grid';
+}
+
+// --- Data & Configuration (291-Color MARD Palette) ---
+const MARD_COLORS_FULL = {
+    "A1": "#FAF4C8", "A2": "#FFFFD5", "A3": "#FEFF8B", "A4": "#FBED56", "A5": "#F4D738", "A6": "#FEAC4C", "A7": "#FE8B4C", "A8": "#FFDA45", "A9": "#FF995B", "A10": "#F77C31", "A11": "#FFDD99", "A12": "#FE9F72", "A13": "#FFC365", "A14": "#FD543D", "A15": "#FFF365", "A16": "#FFFF9F", "A17": "#FFE36E", "A18": "#FEBE7D", "A19": "#FD7C72", "A20": "#FFD568", "A21": "#FFE395", "A22": "#F4F57D", "A23": "#E6C9B7", "A24": "#F7F8A2", "A25": "#FFD67D", "A26": "#FFC830",
+    "B1": "#E6EE31", "B2": "#63F347", "B3": "#9EF780", "B4": "#5DE035", "B5": "#35E352", "B6": "#65E2A6", "B7": "#3DAF80", "B8": "#1C9C4F", "B9": "#27523A", "B10": "#95D3C2", "B11": "#5D722A", "B12": "#166F41", "B13": "#CAEB7B", "B14": "#ADE946", "B15": "#2E5132", "B16": "#C5ED9C", "B17": "#9BB13A", "B18": "#E6EE49", "B19": "#24B88C", "B20": "#C2F0CC", "B21": "#156A6B", "B22": "#0B3C43", "B23": "#303A21", "B24": "#EEFCA5", "B25": "#4E846D", "B26": "#8D7A35", "B27": "#CCE1AF", "B28": "#9EE5B9", "B29": "#C5E254", "B30": "#E2FCB1", "B31": "#B0E792", "B32": "#9CAB5A",
+    "C1": "#E8FFE7", "C2": "#A9F9FC", "C3": "#A0E2FB", "C4": "#41CCFF", "C5": "#01ACEB", "C6": "#50AAF0", "C7": "#3677D2", "C8": "#0F54C0", "C9": "#324BCA", "C10": "#3EBCE2", "C11": "#28DDDE", "C12": "#1C334D", "C13": "#CDE8FF", "C14": "#D5FDFF", "C15": "#22C4C6", "C16": "#1557A8", "C17": "#04D1F6", "C18": "#1D3344", "C19": "#1887A2", "C20": "#176DAF", "C21": "#BEDDFF", "C22": "#67B4BE", "C23": "#C8E2FF", "C24": "#7CC4FF", "C25": "#A9E5E5", "C26": "#3CAED8", "C27": "#D3DFFA", "C28": "#BBCFED", "C29": "#34488E",
+    "D1": "#AEB4F2", "D2": "#858EDD", "D3": "#2F54AF", "D4": "#182A84", "D5": "#B843C5", "D6": "#AC7BDE", "D7": "#8854B3", "D8": "#E2D3FF", "D9": "#D5B9F8", "D10": "#361B51", "D11": "#B9BAE1", "D12": "#DE9AD4", "D13": "#B90095", "D14": "#8B279B", "D15": "#2F1F90", "D16": "#E3E1EE", "D17": "#C4D4F6", "D18": "#A45EC7", "D19": "#D8C3D7", "D20": "#9C32B2", "D21": "#9A009B", "D22": "#333A95", "D23": "#EBDAFC", "D24": "#7786E5", "D25": "#494FC7", "D26": "#DFC2F8",
+    "E1": "#FDD3CC", "E2": "#FEC0DF", "E3": "#FFB7E7", "E4": "#E8649E", "E5": "#F551A2", "E6": "#F13D74", "E7": "#C63478", "E8": "#FFDBE9", "E9": "#E970CC", "E10": "#D33793", "E11": "#FCDDD2", "E12": "#F78FC3", "E13": "#B5006D", "E14": "#FFD1BA", "E15": "#F8C7C9", "E16": "#FFF3EB", "E17": "#FFE2EA", "E18": "#FFC7DB", "E19": "#FEBAD5", "E20": "#D8C7D1", "E21": "#BD9DA1", "E22": "#B785A1", "E23": "#937A8D", "E24": "#FFFF00",
+    "F1": "#FD957B", "F2": "#FC3D46", "F3": "#F74941", "F4": "#FC283C", "F5": "#E7002F", "F6": "#943630", "F7": "#971937", "F8": "#BC0028", "F9": "#E2677A", "F10": "#8A4526", "F11": "#5A2121", "F12": "#FD4E6A", "F13": "#F35744", "F14": "#FFA9AD", "F15": "#D30022", "F16": "#FEC2A6", "F17": "#E69C79", "F18": "#D37C46", "F19": "#C1444A", "F20": "#CD9391", "F21": "#F7B4C6", "F22": "#FDC0D0", "F23": "#F67E66", "F24": "#E698AA", "F25": "#E54B4F",
+    "G1": "#FFE2CE", "G2": "#FFC4AA", "G3": "#F4C3A5", "G4": "#E1B383", "G5": "#EDB045", "G6": "#E99C17", "G7": "#9D5B3E", "G8": "#753B32", "G9": "#E6B483", "G10": "#D98C39", "G11": "#E0C593", "G12": "#FFC890", "G13": "#B7714A", "G14": "#8D614C", "G15": "#FCF9E0", "G16": "#F2D9BA", "G17": "#7B524B", "G18": "#FFE4CC", "G19": "#E07935", "G20": "#A94023", "G21": "#B88558",
+    "H1": "#FDFBFF", "H2": "#FEFFFF", "H3": "#B6B1BA", "H4": "#89858C", "H5": "#48464E", "H6": "#2F2B2F", "H7": "#000000", "H8": "#E7D6DB", "H9": "#EDEDED", "H10": "#EEE9EA", "H11": "#CECDD5", "H12": "#FFF5ED", "H13": "#F5ECD2", "H14": "#CFD7D3", "H15": "#98A6A8", "H16": "#1D1414", "H17": "#F1EDED", "H18": "#FFFDF0", "H19": "#F6EFE2", "H20": "#949FA3", "H21": "#FFFBE1", "H22": "#CACAD4", "H23": "#9A9D94",
+    "M1": "#BCC6B8", "M2": "#8AA386", "M3": "#697D80", "M4": "#E3D2BC", "M5": "#D0CCAA", "M6": "#B0A782", "M7": "#B4A497", "M8": "#B38281", "M9": "#A58767", "M10": "#C5B2BC", "M11": "#9F7594", "M12": "#644749", "M13": "#D19066", "M14": "#C77362", "M15": "#757D7B",
+    "P1": "#FCF7F8", "P2": "#B0A9AC", "P3": "#AFDCAB", "P4": "#FEA49F", "P5": "#EE8C3E", "P6": "#5FD0A7", "P7": "#EB9270", "P8": "#F0D958", "P9": "#D9D9D9", "P10": "#D9C7EA", "P11": "#F3ECC9", "P12": "#E6EEF2", "P13": "#AACBEF", "P14": "#3376B0", "P15": "#668575", "P16": "#FEBF45", "P17": "#FEA324", "P18": "#FEB89F", "P19": "#FFE0E9", "P20": "#FEBECF", "P21": "#ECBEBF", "P22": "#E4A89F", "P23": "#A56268",
+    "Q1": "#F2A5E8", "Q2": "#E9EC91", "Q3": "#FFFF00", "Q4": "#FFEBFA", "Q5": "#76CEDE",
+    "R1": "#D50D21", "R2": "#F92F83", "R3": "#FD8324", "R4": "#F8EC31", "R5": "#35C75B", "R6": "#23B891", "R7": "#19779D", "R8": "#1A60C3", "R9": "#9A56B4", "R10": "#FFDB4C", "R11": "#FFEBFA", "R12": "#D8D5CE", "R13": "#55514C", "R14": "#9FE4DF", "R15": "#77CEE9", "R16": "#3ECFCA", "R17": "#4A867A", "R18": "#7FCD9D", "R19": "#CDE55D", "R20": "#E8C7B4", "R21": "#AD6F3C", "R22": "#6C372F", "R23": "#FEB872", "R24": "#F3C1C0", "R25": "#C9675E", "R26": "#D293BE", "R27": "#EA8CB1", "R28": "#9C87D6",
+    "T1": "#FFFFFF",
+    "Y1": "#FD6FB4", "Y2": "#F24B94", "Y3": "#D7FAA0", "Y4": "#8BDBFA", "Y5": "#E987EA",
+    "ZG1": "#DAABB3", "ZG2": "#D6AA87", "ZG3": "#C1BD8D", "ZG4": "#96B69F", "ZG5": "#849DC6", "ZG6": "#94BFE2", "ZG7": "#E2A9D2", "ZG8": "#AB91C0"
+};
+
+// Background colors to be removed
+const BACKGROUND_COLOR_KEYS = ['T1', 'H1', 'H2'];
+
+const ALL_COLOR_KEYS = Object.keys(MARD_COLORS_FULL);
+
+const COLOR_PRESETS = {
+    '入门10色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1'],
+    '标准20色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4'],
+    '进阶30色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4', 'A1','B2','C4','D7','E2','F4','G2','M1','R2'],
+    '专业50色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4', 'A1','B2','C4','D7','E2','F4','G2','M1','R2', 'A2','B3','C6','D8','E4','F6','G3','M2','R3','P2','A3','B4','C7','D9','E5','F7','G4','M3','R4','P4'],
+    '大师100色': Array.from({length: 100}, (_, i) => ALL_COLOR_KEYS[i % ALL_COLOR_KEYS.length]),
+    '全色系291色': ALL_COLOR_KEYS
+};
+
+// --- DOM Elements ---
+const sidebar = document.getElementById('sidebar'); 
+const menuToggle = document.getElementById('menu-toggle');
+const fileInput = document.getElementById('file-input'); 
+const uploadArea = document.getElementById('upload-area');
+const presetButtons = document.getElementById('preset-buttons'); 
+const customColorSection = document.getElementById('custom-color-section'); 
+const customColorGrid = document.getElementById('custom-color-grid');
+const widthInput = document.getElementById('width-input'); 
+const heightInput = document.getElementById('height-input'); 
+const generateBtn = document.getElementById('generate-btn');
+const zoomInBtn = document.getElementById('zoom-in'); 
+const zoomOutBtn = document.getElementById('zoom-out'); 
+const zoomResetBtn = document.getElementById('zoom-reset');
+const zoomValue = document.getElementById('zoom-value');
+const downloadBtn = document.getElementById('download-btn'); 
+const downloadStatsBtn = document.getElementById('download-stats-btn');
+const toggleListBtn = document.getElementById('toggle-list-btn');
+const highlightBtn = document.getElementById('highlight-btn'); 
+const hideBtn = document.getElementById('hide-btn'); 
+const clearHighlightBtn = document.getElementById('clear-highlight-btn');
+const showGridCheckbox = document.getElementById('show-grid'); 
+const showCoordsCheckbox = document.getElementById('show-coords'); 
+const showColorsCheckbox = document.getElementById('show-colors');
+const showBackgroundCheckbox = document.getElementById('show-background');
+const workspace = document.getElementById('workspace'); 
+const tooltip = document.getElementById('tooltip'); 
+const mobileCoords = document.getElementById('mobile-coords');
+const coordinateDisplay = document.getElementById('coordinate-display');
+const shoppingList = document.getElementById('shopping-list'); 
+const listItems = document.getElementById('list-items');
+const granularitySlider = document.getElementById('granularity-slider');
+const granularityDisplay = document.getElementById('granularity-display');
+const similarityThresholdSlider = document.getElementById('similarity-threshold');
+const thresholdDisplay = document.getElementById('threshold-display');
+const excludedColorsDiv = document.getElementById('excluded-colors');
+const progressContainer = document.getElementById('progress-container');
+const progressFill = document.getElementById('progress-fill');
+const progressText = document.getElementById('progress-text');
+const colorPickerModal = document.getElementById('color-picker-modal');
+const colorPickerClose = document.getElementById('color-picker-close');
+const colorPickerGrid = document.getElementById('color-picker-grid');
+const replaceColorBtn = document.getElementById('replace-color-btn');
+
+// --- State Management ---
+let state = {
+    originalImage: null,
+    activePalette: COLOR_PRESETS['全色系291色'],
+    customPalette: new Set(),
+    excludedColors: new Set(),
+    colorData: [], // 2D array of color codes
+    initialMappedData: [], // Initial mapping data
+    mergedData: [], // Data after region merging
+    externalBackground: [], // Background cells marked as external
+    colorCounts: {},
+    highlightedColor: null,
+    hiddenColors: new Set(),
+    selectedColor: null,
+    selectedCell: null, // {x, y, color} for color replacement
+    zoomLevel: 100,
+    showGrid: true,
+    showCoords: true,
+    showColors: true,
+    showBackground: true,
+    similarityThreshold: 30,
+    granularity: 64,
+    processingMode: '未处理',
+    mergedRegions: 0,
+    backgroundRemoved: '未执行'
+};
+
+// --- Core Algorithms ---
+
+// Euclidean distance between two RGB colors
+const getDistance = (c1, c2) => {
+    return Math.sqrt((c1.r - c2.r) ** 2 + (c1.g - c2.g) ** 2 + (c1.b - c2.b) ** 2);
+};
+
+// Find dominant color in a region using improved sampling
+const findDominantColor = (imageData, startX, startY, width, height, imageWidth) => {
+    const colorCount = {};
+    let totalPixels = 0;
+    
+    for (let y = startY; y < startY + height; y++) {
+        for (let x = startX; x < startX + width; x++) {
+            if (x >= imageWidth || y * imageWidth + x >= imageData.length / 4) continue;
+            
+            const i = (y * imageWidth + x) * 4;
+            const r = imageData[i];
+            const g = imageData[i + 1];
+            const b = imageData[i + 2];
+            const a = imageData[i + 3];
+            
+            // Skip transparent/semi-transparent pixels
+            if (a < 128) continue;
+            
+            totalPixels++;
+            
+            // Create color key with some quantization to group similar colors
+            const qr = Math.round(r / 8) * 8;
+            const qg = Math.round(g / 8) * 8;
+            const qb = Math.round(b / 8) * 8;
+            const key = `${qr},${qg},${qb}`;
+            colorCount[key] = (colorCount[key] || 0) + 1;
+        }
+    }
+    
+    // If no valid pixels, return null
+    if (totalPixels === 0) return null;
+    
+    // Find color with maximum frequency
+    let maxCount = 0;
+    let dominantColorKey = null;
+    
+    for (const [colorKey, count] of Object.entries(colorCount)) {
+        if (count > maxCount) {
+            maxCount = count;
+            dominantColorKey = colorKey;
+        }
+    }
+    
+    if (dominantColorKey) {
+        const [r, g, b] = dominantColorKey.split(',').map(Number);
+        return { r, g, b };
+    }
+    
+    return null;
+};
+
+// Find closest color in palette
+const findClosestColor = (targetRgb, palette) => {
+    if (!targetRgb || palette.length === 0) return null;
+    
+    let minDistance = Infinity;
+    let closestColor = null;
+    
+    for (const colorKey of palette) {
+        const color = MARD_COLORS_FULL[colorKey];
+        const rgb = hexToRgb(color);
+        const distance = getDistance(targetRgb, rgb);
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestColor = colorKey;
+        }
+    }
+    
+    return closestColor;
+};
+
+// Hex to RGB conversion
+const hexToRgb = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+};
+
+// Convert numeric coordinates
+const toAlphaCoord = (x, y) => {
+    return `${x + 1},${y + 1}`;
+};
+
+// BFS for region merging
+const mergeSimilarRegions = (data, width, height, threshold) => {
+    const visited = Array(height).fill(null).map(() => Array(width).fill(false));
+    const result = data.map(row => [...row]);
+    const regions = [];
+    let regionCount = 0;
+    
+    const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            if (visited[y][x]) continue;
+            
+            const currentColor = data[y][x];
+            const region = [];
+            const queue = [[x, y]];
+            visited[y][x] = true;
+            
+            // BFS to find connected region
+            while (queue.length > 0) {
+                const [cx, cy] = queue.shift();
+                region.push([cx, cy]);
+                
+                for (const [dx, dy] of directions) {
+                    const nx = cx + dx;
+                    const ny = cy + dy;
+                    
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height && 
+                        !visited[ny][nx] && data[ny][nx] === currentColor) {
+                        visited[ny][nx] = true;
+                        queue.push([nx, ny]);
+                    }
+                }
+            }
+            
+            // If region is small enough, merge with surrounding colors
+            if (region.length > 1) {
+                regionCount++;
+                
+                // Check similarity with adjacent regions
+                const adjacentColors = {};
+                
+                for (const [cx, cy] of region) {
+                    for (const [dx, dy] of directions) {
+                        const nx = cx + dx;
+                        const ny = cy + dy;
+                        
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            const adjacentColor = data[ny][nx];
+                            if (adjacentColor !== currentColor) {
+                                const color1 = hexToRgb(MARD_COLORS_FULL[currentColor]);
+                                const color2 = hexToRgb(MARD_COLORS_FULL[adjacentColor]);
+                                const distance = getDistance(color1, color2);
+                                
+                                if (distance < threshold) {
+                                    adjacentColors[adjacentColor] = (adjacentColors[adjacentColor] || 0) + 1;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Find most similar adjacent color
+                let maxAdjacency = 0;
+                let dominantAdjacentColor = currentColor;
+                
+                for (const [color, count] of Object.entries(adjacentColors)) {
+                    if (count > maxAdjacency) {
+                        maxAdjacency = count;
+                        dominantAdjacentColor = color;
+                    }
+                }
+                
+                // Merge if similar enough
+                if (dominantAdjacentColor !== currentColor && maxAdjacency > 0) {
+                    for (const [cx, cy] of region) {
+                        result[cy][cx] = dominantAdjacentColor;
+                    }
+                }
+            }
+        }
+    }
+    
+    return { result, regionCount };
+};
+
+// Flood fill for background removal
+const removeBackground = (data, width, height) => {
+    const isExternal = Array(height).fill(null).map(() => Array(width).fill(false));
+    const visited = Array(height).fill(null).map(() => Array(width).fill(false));
+    
+    // Start from all boundary cells
+    const queue = [];
+    
+    // Add all boundary cells
+    for (let x = 0; x < width; x++) {
+        queue.push([x, 0]);
+        queue.push([x, height - 1]);
+    }
+    for (let y = 1; y < height - 1; y++) {
+        queue.push([0, y]);
+        queue.push([width - 1, y]);
+    }
+    
+    const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    
+    while (queue.length > 0) {
+        const [cx, cy] = queue.shift();
+        
+        if (visited[cy][cx]) continue;
+        visited[cy][cx] = true;
+        
+        const color = data[cy][cx];
+        
+        // Check if this is a background color
+        if (BACKGROUND_COLOR_KEYS.includes(color)) {
+            isExternal[cy][cx] = true;
+            
+            // Add adjacent cells to queue
+            for (const [dx, dy] of directions) {
+                const nx = cx + dx;
+                const ny = cy + dy;
+                
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[ny][nx]) {
+                    queue.push([nx, ny]);
+                }
+            }
+        }
+    }
+    
+    return isExternal;
+};
+
+// Remap excluded colors
+const remapExcludedColors = (data, excludedColors, availableColors) => {
+    if (excludedColors.size === 0) return data;
+    
+    const result = data.map(row => [...row]);
+    
+    for (const excludedColor of excludedColors) {
+        const targetPalette = availableColors.filter(color => !excludedColors.has(color));
+        
+        if (targetPalette.length === 0) {
+            console.warn('No available colors after exclusion');
+            continue;
+        }
+        
+        for (let y = 0; y < result.length; y++) {
+            for (let x = 0; x < result[y].length; x++) {
+                if (result[y][x] === excludedColor) {
+                    // Find closest color from target palette
+                    const excludedRgb = hexToRgb(MARD_COLORS_FULL[excludedColor]);
+                    const newColor = findClosestColor(excludedRgb, targetPalette);
+                    if (newColor) {
+                        result[y][x] = newColor;
+                    }
+                }
+            }
+        }
+    }
+    
+    return result;
+};
+
+// --- Main Processing Pipeline ---
+
+// Step 1: Initial Color Mapping with Max Pooling
+const performInitialMapping = (imageData, width, height, imageWidth, imageHeight) => {
+    const cellWidth = Math.floor(imageWidth / width);
+    const cellHeight = Math.floor(imageHeight / height);
+    const mappedData = [];
+    
+    console.log(`开始初始映射: ${width}x${height}, 单元格大小: ${cellWidth}x${cellHeight}`);
+    
+    for (let y = 0; y < height; y++) {
+        const row = [];
+        const startY = Math.floor(y * cellHeight);
+        
+        for (let x = 0; x < width; x++) {
+            const startX = Math.floor(x * cellWidth);
+            
+            // Find dominant color in this cell
+            const dominantColor = findDominantColor(
+                imageData, startX, startY, 
+                cellWidth, cellHeight, imageWidth
+            );
+            
+            if (dominantColor) {
+                // Map to closest color in active palette
+                const colorKey = findClosestColor(dominantColor, state.activePalette);
+                if (colorKey) {
+                    row.push(colorKey);
+                } else {
+                    // Use first available color as fallback
+                    row.push(state.activePalette[0]);
+                }
+            } else {
+                // Use first available color as fallback
+                row.push(state.activePalette[0]);
+            }
+        }
+        mappedData.push(row);
+    }
+    
+    console.log('初始映射完成，映射数据行数:', mappedData.length);
+    return mappedData;
+};
+
+// Step 2: Region Color Merging
+const performRegionMerging = (data) => {
+    const { result, regionCount } = mergeSimilarRegions(
+        data, data[0].length, data.length, state.similarityThreshold
+    );
+    
+    state.processingMode = '区域合并';
+    state.mergedRegions = regionCount;
+    updateStatus();
+    
+    console.log(`区域合并完成，合并了 ${regionCount} 个区域`);
+    return result;
+};
+
+// Step 3: Background Removal
+const performBackgroundRemoval = (data) => {
+    const isExternal = removeBackground(data, data[0].length, data.length);
+    
+    state.processingMode = '背景移除';
+    state.backgroundRemoved = `${isExternal.flat().filter(x => x).length}个单元格`;
+    updateStatus();
+    
+    console.log(`背景移除完成，标记了 ${isExternal.flat().filter(x => x).length} 个背景单元格`);
+    return isExternal;
+};
+
+// Step 4: Color Exclusion and Remapping
+const performColorExclusion = (data, excludedColors) => {
+    if (excludedColors.size === 0) return data;
+    
+    const availableColors = state.activePalette.filter(color => !excludedColors.has(color));
+    console.log(`颜色排除处理，排除颜色数: ${excludedColors.size}, 可用颜色数: ${availableColors.length}`);
+    return remapExcludedColors(data, excludedColors, availableColors);
+};
+
+// Complete processing pipeline
+const processImage = async () => {
+    if (!state.originalImage) {
+        alert("请先上传图片！");
+        return;
+    }
+    
+    console.log('开始处理图片...');
+    
+    // Show progress
+    progressContainer.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressText.textContent = '初始化...';
+    
+    try {
+        // Create canvas for image data
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const width = parseInt(widthInput.value);
+        const height = parseInt(heightInput.value);
+        
+        // Set canvas to actual image dimensions for processing
+        canvas.width = state.originalImage.width;
+        canvas.height = state.originalImage.height;
+        ctx.drawImage(state.originalImage, 0, 0);
+        
+        const fullImageData = ctx.getImageData(0, 0, state.originalImage.width, state.originalImage.height);
+        
+        // Step 1: Initial Mapping
+        progressFill.style.width = '25%';
+        progressText.textContent = '步骤1: 初始颜色映射...';
+        state.initialMappedData = performInitialMapping(
+            fullImageData.data, width, height, 
+            state.originalImage.width, state.originalImage.height
+        );
+        
+        // Step 2: Region Merging
+        progressFill.style.width = '50%';
+        progressText.textContent = '步骤2: 区域颜色合并...';
+        state.mergedData = performRegionMerging(state.initialMappedData);
+        
+        // Step 3: Background Removal
+        progressFill.style.width = '75%';
+        progressText.textContent = '步骤3: 背景移除...';
+        state.externalBackground = performBackgroundRemoval(state.mergedData);
+        
+        // Step 4: Color Exclusion
+        progressFill.style.width = '90%';
+        progressText.textContent = '步骤4: 颜色排除处理...';
+        state.colorData = performColorExclusion(state.mergedData, state.excludedColors);
+        
+        // Update color counts
+        state.colorCounts = {};
+        for (let y = 0; y < state.colorData.length; y++) {
+            for (let x = 0; x < state.colorData[y].length; x++) {
+                if (!state.externalBackground[y][x]) {
+                    const key = state.colorData[y][x];
+                    state.colorCounts[key] = (state.colorCounts[key] || 0) + 1;
+                }
+            }
+        }
+        
+        progressFill.style.width = '100%';
+        progressText.textContent = '完成！';
+        
+        console.log('图片处理完成，颜色统计:', state.colorCounts);
+        
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+        }, 1000);
+        
+        renderCanvas();
+        renderShoppingList();
+        
+    } catch (error) {
+        console.error('Processing error:', error);
+        progressText.textContent = '处理失败，请重试';
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+        }, 2000);
+    }
+};
+
+// --- Rendering Functions ---
+
+const renderCanvas = () => {
+    if (!state.colorData || state.colorData.length === 0) {
+        console.log('没有颜色数据可以渲染');
+        return;
+    }
+    
+    const canvas = document.getElementById('pattern-canvas') || document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.id = 'pattern-canvas';
+    
+    const scale = state.zoomLevel / 100;
+    const baseCellSize = 25;
+    const cellSize = baseCellSize * scale;
+    
+    // Calculate actual content boundaries
+    let minX = state.colorData[0].length;
+    let maxX = 0;
+    let minY = state.colorData.length;
+    let maxY = 0;
+    
+    for(let y=0; y<state.colorData.length; y++) {
+        for(let x=0; x<state.colorData[y].length; x++) {
+            const key = state.colorData[y][x];
+            if (!key) continue;
+            
+            // Only non-background colors count for boundaries
+            if (!(state.externalBackground[y] && state.externalBackground[y][x])) {
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+        }
+    }
+    
+    // Expand boundaries to ensure edges are visible
+    minX = Math.max(0, minX - 1);
+    minY = Math.max(0, minY - 1);
+    maxX = Math.min(state.colorData[0].length - 1, maxX + 1);
+    maxY = Math.min(state.colorData.length - 1, maxY + 1);
+    
+    const actualWidth = maxX - minX + 1;
+    const actualHeight = maxY - minY + 1;
+    
+    const coordSize = state.showCoords ? 50 : 20;
+    const padding = state.showCoords ? 80 : 30;
+    
+    // Set canvas size based on actual content area
+    canvas.width = actualWidth * cellSize + padding;
+    canvas.height = actualHeight * cellSize + padding;
+    
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    workspace.innerHTML = ''; 
+    const container = document.createElement('div'); 
+    container.className = 'canvas-container'; 
+    container.appendChild(canvas); 
+    workspace.appendChild(container);
+
+    // Draw coordinate labels
+    if (state.showCoords) {
+        ctx.font = `bold ${Math.max(14, 14 * scale)}px Arial`; 
+        ctx.textAlign = 'center'; 
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#333';
+        
+        for(let x = minX; x <= maxX; x++) {
+            const label = (x + 1).toString();
+            const xPos = (x - minX) * cellSize + cellSize/2 + padding/2;
+            ctx.fillText(label, xPos, padding/2 - 15);
+        }
+        
+        for(let y = minY; y <= maxY; y++) {
+            const label = (y + 1).toString();
+            const yPos = (y - minY) * cellSize + cellSize/2 + padding/2;
+            ctx.fillText(label, padding/2 - 15, yPos);
+        }
+    }
+
+    // Draw grid and beads - 修复居中和偏移问题
+    const offsetX = state.showCoords ? padding/2 : 15;
+    const offsetY = state.showCoords ? padding/2 : 15;
+    
+    for(let y = minY; y <= maxY; y++) {
+        for(let x = minX; x <= maxX; x++) {
+            const key = state.colorData[y][x];
+            if (!key) continue;
+            
+            const px = (x - minX) * cellSize + offsetX;
+            const py = (y - minY) * cellSize + offsetY;
+            
+            // Skip if this color is hidden
+            if (state.hiddenColors.has(key)) {
+                // Draw empty cell for hidden colors
+                ctx.fillStyle = '#f8f8f8';
+                ctx.fillRect(px, py, cellSize, cellSize);
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(px, py, cellSize, cellSize);
+                continue;
+            }
+            
+            // Skip external background if not showing background
+            if (!state.showBackground && state.externalBackground[y] && state.externalBackground[y][x]) {
+                continue;
+            }
+            
+            // Draw bead
+            if (state.externalBackground[y] && state.externalBackground[y][x]) {
+                // Draw background in light gray
+                ctx.fillStyle = '#f0f0f0';
+            } else {
+                ctx.fillStyle = MARD_COLORS_FULL[key];
+            }
+            ctx.fillRect(px, py, cellSize, cellSize);
+            
+            // Draw grid
+            if (state.showGrid) {
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(px, py, cellSize, cellSize);
+            }
+            
+            // Highlight same color
+            if (state.highlightedColor === key) {
+                ctx.fillStyle = 'rgba(255, 200, 0, 0.4)';
+                ctx.fillRect(px, py, cellSize, cellSize);
+                ctx.strokeStyle = '#ff9500';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(px, py, cellSize, cellSize);
+                ctx.lineWidth = 1;
+            }
+            
+            // Draw color code
+            if (state.showColors && !(state.externalBackground[y] && state.externalBackground[y][x])) {
+                const rgb = hexToRgb(MARD_COLORS_FULL[key]);
+                const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                ctx.fillStyle = brightness > 140 ? '#000' : '#fff';
+                
+                const fontSize = Math.min(cellSize * 0.4, 18 * scale);
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.textAlign = 'center'; 
+                ctx.textBaseline = 'middle';
+                
+                const text = key;
+                ctx.fillText(text, px + cellSize/2, py + cellSize/2);
+            }
+        }
+    }
+    
+    // Store boundary info for click handling
+    canvas.dataset.minX = minX;
+    canvas.dataset.minY = minY;
+    
+    attachCanvasListeners(canvas, cellSize, offsetX, offsetY, minX, minY);
+};
+
+const renderShoppingList = () => {
+    listItems.innerHTML = '';
+    const sorted = Object.entries(state.colorCounts).sort((a,b)=>b[1]-a[1]);
+    sorted.forEach(([key, count]) => {
+        const item = document.createElement('div'); 
+        item.className = 'list-item';
+        item.style.cursor = 'pointer';
+        item.innerHTML = `
+            <div class="list-swatch" style="background:${MARD_COLORS_FULL[key]}"></div>
+            <span><strong>${key}</strong></span>
+            <span style="margin-left:auto; font-weight:600;">×${count}</span>
+        `;
+        item.onclick = () => {
+            state.selectedColor = key;
+            showCoordinateInfo(state.selectedColor, -1, -1);
+        };
+        listItems.appendChild(item);
+    });
+};
+
+const showCoordinateInfo = (colorKey, x, y) => {
+    const display = document.getElementById('coordinate-display');
+    if (x >= 0 && y >= 0) {
+        document.getElementById('coord-position').textContent = `(${x + 1}, ${y + 1})`;
+        document.getElementById('coord-alphabet').textContent = toAlphaCoord(x, y);
+        state.selectedCell = { x, y, color: colorKey };
+    } else {
+        document.getElementById('coord-position').textContent = '-';
+        document.getElementById('coord-alphabet').textContent = '-';
+        state.selectedCell = null;
+    }
+    document.getElementById('coord-color').textContent = colorKey;
+    document.getElementById('coord-hex').textContent = MARD_COLORS_FULL[colorKey];
+    document.getElementById('coord-preview').style.backgroundColor = MARD_COLORS_FULL[colorKey];
+    display.style.display = 'block';
+    
+    setTimeout(() => {
+        display.style.display = 'none';
+    }, 5000);
+};
+
+const attachCanvasListeners = (canvas, cellSize, offsetX, offsetY, minX, minY) => {
+    canvas.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left - offsetX) / cellSize) + minX;
+        const y = Math.floor((e.clientY - rect.top - offsetY) / cellSize) + minY;
+        if (state.colorData[y] && state.colorData[y][x] && x >= 0 && y >= 0) {
+            const key = state.colorData[y][x];
+            if (key) {
+                tooltip.innerHTML = `
+                    坐标: ${toAlphaCoord(x, y)}<br>
+                    位置: (${x+1}, ${y+1})<br>
+                    色号: <strong>${key}</strong><br>
+                    颜色: <span style="display:inline-block;width:14px;height:14px;background:${MARD_COLORS_FULL[key]};border:1px solid #333;vertical-align:middle;"></span>
+                `;
+                tooltip.style.left = e.pageX + 12 + 'px'; 
+                tooltip.style.top = e.pageY - 35 + 'px'; 
+                tooltip.style.display = 'block';
+                mobileCoords.innerHTML = `坐标: ${toAlphaCoord(x, y)} | 色号: ${key}`;
+            }
+        } else { 
+            tooltip.style.display = 'none'; 
+        }
+    };
+    canvas.onmouseleave = () => { 
+        tooltip.style.display = 'none'; 
+    };
+    canvas.onclick = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left - offsetX) / cellSize) + minX;
+        const y = Math.floor((e.clientY - rect.top - offsetY) / cellSize) + minY;
+        if (state.colorData[y] && state.colorData[y][x] && x >= 0 && y >= 0) {
+            state.selectedColor = state.colorData[y][x];
+            state.selectedCell = { x, y, color: state.colorData[y][x] };
+            showCoordinateInfo(state.selectedColor, x, y);
+        }
+    };
+};
+
+// --- Color Picker Functions ---
+const showColorPicker = () => {
+    colorPickerGrid.innerHTML = '';
+    
+    // Sort colors by name for better organization
+    const sortedColors = Object.entries(MARD_COLORS_FULL);
+    
+    sortedColors.forEach(([key, color]) => {
+        const item = document.createElement('div');
+        item.className = 'color-picker-item';
+        item.dataset.color = key;
+        
+        // Create color preview
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'color-picker-color';
+        colorDiv.style.backgroundColor = color;
+        
+        // Create color label
+        const label = document.createElement('div');
+        label.className = 'color-picker-label';
+        label.textContent = key;
+        
+        item.appendChild(colorDiv);
+        item.appendChild(label);
+        
+        if (key === state.selectedCell?.color) {
+            item.classList.add('selected');
+        }
+        
+        item.onclick = () => {
+            // Update selected cell with new color
+            if (state.selectedCell) {
+                const oldColor = state.colorData[state.selectedCell.y][state.selectedCell.x];
+                state.colorData[state.selectedCell.y][state.selectedCell.x] = key;
+                
+                // Update color counts
+                state.colorCounts[oldColor]--;
+                state.colorCounts[key] = (state.colorCounts[key] || 0) + 1;
+                
+                // Clean up zero counts
+                if (state.colorCounts[oldColor] <= 0) {
+                    delete state.colorCounts[oldColor];
+                }
+                
+                renderCanvas();
+                renderShoppingList();
+                colorPickerModal.style.display = 'none';
+            }
+        };
+        
+        colorPickerGrid.appendChild(item);
+    });
+    
+    colorPickerModal.style.display = 'flex';
+};
+
+// --- UI & Event Handlers ---
+const updateStatus = () => {
+    document.getElementById('processing-mode').textContent = state.processingMode;
+    document.getElementById('merged-regions').textContent = state.mergedRegions + '个区域';
+    document.getElementById('background-removed').textContent = state.backgroundRemoved;
+};
+
+const initializeUI = () => {
+    Object.keys(COLOR_PRESETS).forEach(name => {
+        const btn = document.createElement('button'); 
+        btn.className = 'preset-btn'; 
+        btn.textContent = name;
+        btn.onclick = () => { 
+            state.activePalette = COLOR_PRESETS[name]; 
+            document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active')); 
+            btn.classList.add('active'); 
+            // Auto process if image is loaded
+            if (state.originalImage) {
+                processImage();
+            }
+        };
+        if (name === '全色系291色') btn.classList.add('active');
+        presetButtons.appendChild(btn);
+    });
+
+    const customBtn = document.createElement('button'); 
+    customBtn.className = 'preset-btn'; 
+    customBtn.textContent = '自定义';
+    customBtn.onclick = () => {
+        customColorSection.style.display = customColorSection.style.display === 'none' ? 'block' : 'none';
+        if(customColorSection.style.display === 'block') renderCustomColorGrid();
+    };
+    presetButtons.appendChild(customBtn);
+};
+
+const renderCustomColorGrid = () => {
+    customColorGrid.innerHTML = '';
+    ALL_COLOR_KEYS.forEach(key => {
+        const swatch = document.createElement('div'); 
+        swatch.className = 'color-swatch';
+        swatch.style.backgroundColor = MARD_COLORS_FULL[key];
+        swatch.dataset.key = key;
+        
+        // Add tooltip
+        const tooltip = document.createElement('span');
+        tooltip.textContent = key;
+        swatch.appendChild(tooltip);
+        
+        if (state.customPalette.has(key)) swatch.classList.add('active');
+        swatch.onclick = () => {
+            if(state.customPalette.has(key)) state.customPalette.delete(key);
+            else state.customPalette.add(key);
+            renderCustomColorGrid();
+        };
+        customColorGrid.appendChild(swatch);
+    });
+};
+
+const updateExcludedColorsDisplay = () => {
+    excludedColorsDiv.innerHTML = '';
+    state.excludedColors.forEach(colorKey => {
+        const item = document.createElement('div');
+        item.className = 'excluded-color-item';
+        item.innerHTML = `
+            <div class="excluded-color-swatch" style="background:${MARD_COLORS_FULL[colorKey]}"></div>
+            <span>${colorKey}</span>
+            <span class="remove-exclusion" data-color="${colorKey}">✕</span>
+        `;
+        excludedColorsDiv.appendChild(item);
+    });
+    
+    // Add click handlers for removal buttons
+    excludedColorsDiv.querySelectorAll('.remove-exclusion').forEach(btn => {
+        btn.onclick = () => {
+            const colorKey = btn.dataset.color;
+            state.excludedColors.delete(colorKey);
+            updateExcludedColorsDisplay();
+            
+            // Reprocess if we have data
+            if (state.colorData.length > 0) {
+                processImage();
+            }
+        };
+    });
+};
+
+// --- Event Listeners ---
+uploadArea.onclick = () => fileInput.click();
+uploadArea.ondragover = (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); };
+uploadArea.ondragleave = () => uploadArea.classList.remove('dragover');
+uploadArea.ondrop = (e) => { 
+    e.preventDefault(); 
+    uploadArea.classList.remove('dragover'); 
+    const file = e.dataTransfer.files[0]; 
+    if(file) handleFile(file); 
+};
+fileInput.onchange = (e) => { 
+    if(e.target.files[0]) handleFile(e.target.files[0]); 
+};
+
+const handleFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => { 
+            state.originalImage = img;
+            console.log('图片加载成功，尺寸:', img.width, 'x', img.height);
+            
+            // Auto update dimensions based on aspect ratio
+            if (img.width && img.height) {
+                const aspectRatio = img.height / img.width;
+                heightInput.value = Math.round(widthInput.value * aspectRatio);
+                granularityDisplay.textContent = `${widthInput.value} × ${heightInput.value}`;
+            }
+            
+            // Auto process image
+            processImage();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+generateBtn.onclick = processImage;
+
+// Granularity slider
+granularitySlider.oninput = (e) => {
+    const value = parseInt(e.target.value);
+    state.granularity = value;
+    widthInput.value = value;
+    if (state.originalImage) {
+        heightInput.value = Math.round(value * (state.originalImage.height / state.originalImage.width));
+    } else {
+        heightInput.value = value;
+    }
+    granularityDisplay.textContent = `${value} × ${heightInput.value}`;
+    
+    // Auto process if image is loaded
+    if (state.originalImage) {
+        processImage();
+    }
+};
+
+// Similarity threshold slider
+similarityThresholdSlider.oninput = (e) => {
+    state.similarityThreshold = parseInt(e.target.value);
+    thresholdDisplay.textContent = state.similarityThreshold;
+    
+    // Auto process if image is loaded
+    if (state.originalImage) {
+        processImage();
+    }
+};
+
+// Zoom controls
+zoomInBtn.onclick = () => {
+    state.zoomLevel = Math.min(300, state.zoomLevel + 10);
+    zoomValue.textContent = state.zoomLevel + '%';
+    renderCanvas();
+};
+zoomOutBtn.onclick = () => {
+    state.zoomLevel = Math.max(50, state.zoomLevel - 10);
+    zoomValue.textContent = state.zoomLevel + '%';
+    renderCanvas();
+};
+zoomResetBtn.onclick = () => {
+    state.zoomLevel = 100;
+    zoomValue.textContent = state.zoomLevel + '%';
+    renderCanvas();
+};
+
+// Display controls
+showGridCheckbox.onchange = (e) => {
+    state.showGrid = e.target.checked;
+    renderCanvas();
+};
+showCoordsCheckbox.onchange = (e) => {
+    state.showCoords = e.target.checked;
+    renderCanvas();
+};
+showColorsCheckbox.onchange = (e) => {
+    state.showColors = e.target.checked;
+    renderCanvas();
+};
+showBackgroundCheckbox.onchange = (e) => {
+    state.showBackground = e.target.checked;
+    renderCanvas();
+};
+
+// Color manipulation buttons - 修复高亮和隐藏功能
+highlightBtn.onclick = () => {
+    if (state.selectedColor) {
+        if (state.highlightedColor === state.selectedColor) {
+            // 如果已经高亮了这个颜色，则取消高亮
+            state.highlightedColor = null;
+            highlightBtn.classList.remove('active');
+        } else {
+            // 高亮选中的颜色
+            state.highlightedColor = state.selectedColor;
+            highlightBtn.classList.add('active');
+        }
+        console.log('高亮颜色:', state.highlightedColor);
+        renderCanvas();
+    } else {
+        alert('请先点击一个珠子选择颜色');
+    }
+};
+
+hideBtn.onclick = () => {
+    if (state.selectedColor) {
+        if (state.hiddenColors.has(state.selectedColor)) {
+            // 如果已经隐藏了这个颜色，则显示
+            state.hiddenColors.delete(state.selectedColor);
+            hideBtn.classList.remove('active');
+        } else {
+            // 隐藏选中的颜色
+            state.hiddenColors.add(state.selectedColor);
+            hideBtn.classList.add('active');
+        }
+        console.log('隐藏的颜色:', Array.from(state.hiddenColors));
+        renderCanvas();
+    } else {
+        alert('请先点击一个珠子选择颜色');
+    }
+};
+
+clearHighlightBtn.onclick = () => {
+    state.highlightedColor = null;
+    state.hiddenColors.clear();
+    state.selectedColor = null;
+    highlightBtn.classList.remove('active');
+    hideBtn.classList.remove('active');
+    console.log('清除所有高亮和隐藏');
+    renderCanvas();
+};
+
+toggleListBtn.onclick = () => shoppingList.classList.toggle('visible');
+
+// Color picker event listeners
+replaceColorBtn.onclick = showColorPicker;
+colorPickerClose.onclick = () => {
+    colorPickerModal.style.display = 'none';
+};
+colorPickerModal.onclick = (e) => {
+    if (e.target === colorPickerModal) {
+        colorPickerModal.style.display = 'none';
+    }
+};
+
+// Download functions
+downloadBtn.onclick = () => {
+    const canvas = document.createElement('canvas'); 
+    const ctx = canvas.getContext('2d');
+    const hdCellSize = 50;
+    const coordSize = state.showCoords ? 200 : 40;
+    const padding = state.showCoords ? 300 : 80;
+    
+    // Calculate actual content boundaries
+    let minX = state.colorData[0].length;
+    let maxX = 0;
+    let minY = state.colorData.length;
+    let maxY = 0;
+    
+    for(let y=0; y<state.colorData.length; y++) {
+        for(let x=0; x<state.colorData[y].length; x++) {
+            const key = state.colorData[y][x];
+            if (!key) continue;
+            
+            // Only non-background colors count for boundaries
+            if (!(state.externalBackground[y] && state.externalBackground[y][x])) {
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+        }
+    }
+    
+    // Expand boundaries to ensure edges are visible
+    minX = Math.max(0, minX - 1);
+    minY = Math.max(0, minY - 1);
+    maxX = Math.min(state.colorData[0].length - 1, maxX + 1);
+    maxY = Math.min(state.colorData.length - 1, maxY + 1);
+    
+    const actualWidth = maxX - minX + 1;
+    const actualHeight = maxY - minY + 1;
+    
+    canvas.width = actualWidth * hdCellSize + padding;
+    canvas.height = actualHeight * hdCellSize + padding + 350;
+    
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw coordinate labels
+    if (state.showCoords) {
+        ctx.font = 'bold 32px Arial'; 
+        ctx.textAlign = 'center'; 
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#333';
+        
+        for(let x = minX; x <= maxX; x++) {
+            const label = (x + 1).toString();
+            const xPos = (x - minX) * hdCellSize + hdCellSize/2 + padding/2;
+            ctx.fillText(label, xPos, padding/2 - 40);
+        }
+        
+        for(let y = minY; y <= maxY; y++) {
+            const label = (y + 1).toString();
+            const yPos = (y - minY) * hdCellSize + hdCellSize/2 + padding/2;
+            ctx.fillText(label, padding/2 - 40, yPos);
+        }
+    }
+
+    // Draw pattern
+    const offsetX = state.showCoords ? padding/2 : 40;
+    const offsetY = state.showCoords ? padding/2 : 40;
+    
+    for(let y = minY; y <= maxY; y++) {
+        for(let x = minX; x <= maxX; x++) {
+            const key = state.colorData[y][x];
+            if (!key) continue;
+            
+            const px = (x - minX) * hdCellSize + offsetX;
+            const py = (y - minY) * hdCellSize + offsetY;
+            
+            if (state.externalBackground[y] && state.externalBackground[y][x] && !state.showBackground) continue;
+            
+            // Skip hidden colors in download
+            if (state.hiddenColors.has(key)) {
+                ctx.fillStyle = '#f8f8f8';
+                ctx.fillRect(px, py, hdCellSize, hdCellSize);
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(px, py, hdCellSize, hdCellSize);
+                continue;
+            }
+            
+            if (state.externalBackground[y] && state.externalBackground[y][x]) {
+                ctx.fillStyle = '#f0f0f0';
+            } else {
+                ctx.fillStyle = MARD_COLORS_FULL[key];
+            }
+            ctx.fillRect(px, py, hdCellSize, hdCellSize);
+            
+            if (state.showGrid) {
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(px, py, hdCellSize, hdCellSize);
+            }
+            
+            if (state.showColors && !(state.externalBackground[y] && state.externalBackground[y][x]) && !state.hiddenColors.has(key)) {
+                const rgb = hexToRgb(MARD_COLORS_FULL[key]);
+                const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                ctx.fillStyle = brightness > 140 ? '#000' : '#fff';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center'; 
+                ctx.textBaseline = 'middle';
+                
+                const text = key;
+                ctx.fillText(text, px + hdCellSize/2, py + hdCellSize/2);
+            }
+        }
+    }
+    
+    // Draw material list
+    const listY = actualHeight * hdCellSize + offsetY + 50;
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'left';
+    ctx.fillText('📦 材料清单:', 50, listY);
+    
+    const sorted = Object.entries(state.colorCounts).sort((a,b)=>b[1]-a[1]);
+    let xOffset = 50;
+    let yOffset = listY + 50;
+    const itemWidth = 140;
+    const itemHeight = 90;
+    const itemsPerRow = Math.floor((canvas.width - 100) / (itemWidth + 20));
+    
+    sorted.forEach(([key, count], index) => {
+        const col = index % itemsPerRow;
+        const row = Math.floor(index / itemsPerRow);
+        const itemX = 50 + col * (itemWidth + 20);
+        const itemY = yOffset + row * (itemHeight + 20);
+        
+        ctx.fillStyle = MARD_COLORS_FULL[key];
+        ctx.fillRect(itemX, itemY, 45, 45);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(itemX, itemY, 45, 45);
+        
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(key, itemX + 55, itemY + 20);
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`×${count}`, itemX + 55, itemY + 45);
+        
+        const neededHeight = itemY + itemHeight + 50;
+        if (neededHeight > canvas.height) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = neededHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(canvas, 0, 0);
+            canvas.width = tempCanvas.width;
+            canvas.height = tempCanvas.height;
+            ctx.drawImage(tempCanvas, 0, 0);
+        }
+    });
+    
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText('拼豆图纸生成器-西瓜制作', canvas.width/2, canvas.height - 60);
+    ctx.fillText('版权已登记，仅授权于淘宝店铺：大师精品资料', canvas.width/2, canvas.height - 35);
+    
+    const link = document.createElement('a'); 
+    link.download = `mard-pattern-${Date.now()}.png`; 
+    link.href = canvas.toDataURL('image/png', 1.0); 
+    link.click();
+};
+
+// Download statistics image
+downloadStatsBtn.onclick = () => {
+    const canvas = document.createElement('canvas'); 
+    const ctx = canvas.getContext('2d');
+    const sorted = Object.entries(state.colorCounts).sort((a,b)=>b[1]-a[1]);
+    
+    const itemWidth = 120;
+    const itemHeight = 80;
+    const itemsPerRow = 8;
+    const rows = Math.ceil(sorted.length / itemsPerRow);
+    
+    canvas.width = itemsPerRow * itemWidth + 100;
+    canvas.height = rows * itemHeight + 150;
+    
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'center';
+    ctx.fillText('📊 材料统计图', canvas.width/2, 40);
+    
+    sorted.forEach(([key, count], index) => {
+        const col = index % itemsPerRow;
+        const row = Math.floor(index / itemsPerRow);
+        const itemX = 50 + col * itemWidth;
+        const itemY = 80 + row * itemHeight;
+        
+        ctx.fillStyle = MARD_COLORS_FULL[key];
+        ctx.fillRect(itemX, itemY, 40, 40);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(itemX, itemY, 40, 40);
+        
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(key, itemX + 20, itemY + 55);
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText(`×${count}`, itemX + 20, itemY + 70);
+    });
+    
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText('拼豆图纸生成器-西瓜制作', canvas.width/2, canvas.height - 20);
+    
+    const link = document.createElement('a'); 
+    link.download = `mard-stats-${Date.now()}.png`; 
+    link.href = canvas.toDataURL('image/png', 1.0); 
+    link.click();
+};
+
+// --- Responsiveness ---
+menuToggle.onclick = () => sidebar.classList.toggle('open');
+window.addEventListener('resize', () => { 
+    if (window.innerWidth > 1024) sidebar.classList.remove('open'); 
+});
+const checkMobile = () => { 
+    menuToggle.style.display = window.innerWidth <= 1024 ? 'block' : 'none'; 
+};
+window.addEventListener('resize', checkMobile); 
+checkMobile();
+
+// --- Color exclusion from canvas clicks ---
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Delete' && state.selectedColor && state.colorData.length > 0) {
+        // Add selected color to exclusion list
+        state.excludedColors.add(state.selectedColor);
+        updateExcludedColorsDisplay();
+        
+        // Reprocess image
+        processImage();
+    }
+});
+
+// --- Init ---
+document.addEventListener('DOMContentLoaded', function() {
+    initializeUI();
+});
+</script>
+
+</body>
+</html>
