@@ -144,6 +144,41 @@
             transform: translateY(-2px);
         }
         #file-input { display: none; }
+        
+        /* --- Brand Selection --- */
+        .brand-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .brand-btn {
+            padding: 0.8rem;
+            border: 2px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+        }
+        
+        .brand-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+        
+        .brand-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
         .preset-buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; }
         .preset-btn { 
             padding: 0.6rem 1rem; 
@@ -260,6 +295,32 @@
         .slider-group { margin-top: 1.2rem; }
         .slider-group label { display: block; font-size: 0.95rem; margin-bottom: 0.6rem; color: var(--text-secondary); }
         .slider-group input { width: 100%; }
+        
+        /* --- Line Enhancement Controls --- */
+        .line-enhance-control {
+            margin-bottom: 1rem;
+        }
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .checkbox-option:hover {
+            background: rgba(74, 144, 226, 0.05);
+        }
+        .checkbox-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .checkbox-option label {
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
         
         /* --- Enhanced Size Inputs --- */
         .size-inputs { 
@@ -406,7 +467,7 @@
         .color-picker-modal {
             position: fixed;
             top: 0;
-            left: 0;
+            left: 0,
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
@@ -721,6 +782,9 @@
                 width: 30px;
                 height: 30px;
             }
+            .color-picker-label {
+                font-size: 9px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -809,7 +873,12 @@
         </div>
 
         <div class="control-section">
-            <h3 class="control-title">🎨 2. 颜色预设</h3>
+            <h3 class="control-title">🏷️ 2. 品牌选择</h3>
+            <div class="brand-buttons" id="brand-buttons"></div>
+        </div>
+
+        <div class="control-section">
+            <h3 class="control-title">🎨 3. 颜色预设</h3>
             <div class="preset-buttons" id="preset-buttons"></div>
             <div id="custom-color-section" style="display:none;">
                 <label style="font-size:0.95rem; font-weight: 500;">自定义颜色 (点击选择):</label>
@@ -819,7 +888,24 @@
         </div>
 
         <div class="control-section">
-            <h3 class="control-title">📐 3. 图纸设置</h3>
+            <h3 class="control-title">📐 4. 图纸设置</h3>
+            
+            <!-- 线条增强选项 -->
+            <div class="line-enhance-control">
+                <div class="checkbox-option">
+                    <input type="checkbox" id="useLineEnhance">
+                    <label for="useLineEnhance">🖊️ 线条增强（适合卡通、动漫图片）</label>
+                </div>
+                <div id="lineStrengthSection" style="display: none; margin-top: 0.5rem;">
+                    <label>线条强度：<span id="lineStrengthValue">3</span></label>
+                    <input type="range" id="lineStrength" min="1" max="10" value="3" style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #999; margin-top: 0.3rem;">
+                        <span>细线条</span>
+                        <span>粗线条</span>
+                    </div>
+                </div>
+            </div>
+            
             <div class="granularity-control">
                 <label style="font-size:0.95rem; font-weight: 500;">网格粒度 (控制细节程度)</label>
                 <input type="range" id="granularity-slider" class="granularity-slider" min="10" max="200" value="64">
@@ -859,12 +945,12 @@
         </div>
 
         <div class="control-section">
-            <h3 class="control-title">🚫 4. 颜色排除</h3>
+            <h3 class="control-title">🚫 5. 颜色排除</h3>
             <div id="excluded-colors" class="excluded-colors"></div>
         </div>
 
         <div class="control-section">
-            <h3 class="control-title">⚙️ 5. 操作 & 下载</h3>
+            <h3 class="control-title">⚙️ 6. 操作 & 下载</h3>
             <div class="zoom-controls">
                 <span>缩放:</span>
                 <button class="btn-zoom" id="zoom-out">－</button>
@@ -1040,7 +1126,9 @@ if (sessionStorage.getItem('activated') === 'true') {
     document.getElementById('app-container').style.display = 'grid';
 }
 
-// --- Data & Configuration (291-Color MARD Palette) ---
+// --- Data & Configuration (Five Brand Palettes) ---
+
+// MARD色板
 const MARD_COLORS_FULL = {
     "A1": "#FAF4C8", "A2": "#FFFFD5", "A3": "#FEFF8B", "A4": "#FBED56", "A5": "#F4D738", "A6": "#FEAC4C", "A7": "#FE8B4C", "A8": "#FFDA45", "A9": "#FF995B", "A10": "#F77C31", "A11": "#FFDD99", "A12": "#FE9F72", "A13": "#FFC365", "A14": "#FD543D", "A15": "#FFF365", "A16": "#FFFF9F", "A17": "#FFE36E", "A18": "#FEBE7D", "A19": "#FD7C72", "A20": "#FFD568", "A21": "#FFE395", "A22": "#F4F57D", "A23": "#E6C9B7", "A24": "#F7F8A2", "A25": "#FFD67D", "A26": "#FFC830",
     "B1": "#E6EE31", "B2": "#63F347", "B3": "#9EF780", "B4": "#5DE035", "B5": "#35E352", "B6": "#65E2A6", "B7": "#3DAF80", "B8": "#1C9C4F", "B9": "#27523A", "B10": "#95D3C2", "B11": "#5D722A", "B12": "#166F41", "B13": "#CAEB7B", "B14": "#ADE946", "B15": "#2E5132", "B16": "#C5ED9C", "B17": "#9BB13A", "B18": "#E6EE49", "B19": "#24B88C", "B20": "#C2F0CC", "B21": "#156A6B", "B22": "#0B3C43", "B23": "#303A21", "B24": "#EEFCA5", "B25": "#4E846D", "B26": "#8D7A35", "B27": "#CCE1AF", "B28": "#9EE5B9", "B29": "#C5E254", "B30": "#E2FCB1", "B31": "#B0E792", "B32": "#9CAB5A",
@@ -1059,25 +1147,294 @@ const MARD_COLORS_FULL = {
     "ZG1": "#DAABB3", "ZG2": "#D6AA87", "ZG3": "#C1BD8D", "ZG4": "#96B69F", "ZG5": "#849DC6", "ZG6": "#94BFE2", "ZG7": "#E2A9D2", "ZG8": "#AB91C0"
 };
 
-// Background colors to be removed
-const BACKGROUND_COLOR_KEYS = ['T1', 'H1', 'H2'];
+// COCO色板
+const COCO_COLORS = {
+    "E02": "#FAF4C8", "E01": "#FFFFD5", "E05": "#FEFF8B", "E07": "#FBED56", "E08": "#F4D738", 
+    "E06": "#FEAC4C", "E04": "#FE8B4C", "E09": "#FFDA45", "E10": "#FF995B", "E03": "#F77C31", 
+    "E11": "#FFDD99", "E12": "#FE9F72", "E13": "#FFC365", "E14": "#FD543D", "E15": "#FFF365", 
+    "E16": "#FFFF9F", "E17": "#FFE36E", "E18": "#FEBE7D", "E19": "#FD7C72", "E20": "#FFD568", 
+    "E21": "#FFE395", "E22": "#F4F57D", "E23": "#E6C9B7", "E24": "#F7F8A2", "E25": "#FFD67D", 
+    "E26": "#FFC830", "F05": "#E6EE31", "F08": "#63F347", "F04": "#9EF780", "F09": "#5DE035", 
+    "F10": "#35E352", "G04": "#65E2A6", "G05": "#3DAF80", "F11": "#1C9C4F", "F16": "#27523A", 
+    "G03": "#95D3C2", "F14": "#5D722A", "F12": "#166F41", "F02": "#CAEB7B", "F06": "#ADE946", 
+    "F15": "#2E5132", "F03": "#C5ED9C", "F13": "#9BB13A", "F07": "#E6EE49", "F17": "#24B88C", 
+    "G02": "#C2F0CC", "G06": "#156A6B", "G08": "#0B3C43", "G07": "#303A21", "F01": "#EEFCA5", 
+    "F18": "#4E846D", "F19": "#8D7A35", "F20": "#CCE1AF", "F21": "#9EE5B9", "F22": "#C5E254", 
+    "F23": "#E2FCB1", "F24": "#B0E792", "F25": "#9CAB5A", "G01": "#E8FFE7", "H03": "#A9F9FC", 
+    "H04": "#A0E2FB", "H05": "#41CCFF", "H07": "#01ACEB", "H06": "#50AAF0", "H08": "#3677D2", 
+    "H09": "#0F54C0", "H10": "#324BCA", "H13": "#3EBCE2", "H11": "#28DDDE", "H12": "#1C334D", 
+    "H14": "#CDE8FF", "H15": "#D5FDFF", "H16": "#22C4C6", "H17": "#1557A8", "H18": "#04D1F6", 
+    "DH6": "#1D3344", "DH9": "#1887A2", "DH14": "#176DAF", "IC3": "#BEDDFF", "Q11": "#67B4BE", 
+    "R13": "#C8E2FF", "R14": "#7CC4FF", "R12": "#A9E5E5", "R15": "#3CAED8", "G13": "#D3DFFA", 
+    "G14": "#BBCFED", "G15": "#34488E", "D5": "#AEB4F2", "D6": "#858EDD", "D10": "#2F54AF", 
+    "D11": "#182A84", "D13": "#B843C5", "D14": "#AC7BDE", "D16": "#8854B3", "D17": "#E2D3FF", 
+    "D19": "#D5B9F8", "D15": "#361B51", "D20": "#B9BAE1", "D21": "#DE9AD4", "D22": "#B90095", 
+    "D23": "#8B279B", "D24": "#2F1F90", "D18": "#E3E1EE", "D27": "#C4D4F6", "D33": "#A45EC7", 
+    "D34": "#D8C3D7", "D35": "#9C32B2", "DH1": "#9A009B", "DH8": "#333A95", "IC8": "#EBDAFC", 
+    "Q14": "#7786E5", "Q15": "#494FC7", "R01": "#DFC2F8", "K03": "#FDD3CC", "K17": "#FEC0DF", 
+    "K21": "#FFB7E7", "K19": "#E8649E", "K25": "#F551A2", "K22": "#F13D74", "K12": "#C63478", 
+    "K18": "#FFDBE9", "K23": "#E970CC", "K16": "#D33793", "K02": "#FCDDD2", "K08": "#F78FC3", 
+    "K24": "#B5006D", "K05": "#FFD1BA", "K04": "#F8C7C9", "K01": "#FFF3EB", "K11": "#FFE2EA", 
+    "K13": "#FFC7DB", "K14": "#FEBAD5", "K26": "#D8C7D1", "K27": "#BD9DA1", "K28": "#B785A1", 
+    "K29": "#937A8D", "K30": "#FFFF00", "K08": "#FD957B", "C02": "#FC3D46", "C03": "#F74941", 
+    "C06": "#FC283C", "C07": "#E7002F", "C09": "#943630", "C10": "#971937", "C11": "#BC0028", 
+    "C08": "#E2677A", "C05": "#8A4526", "C01": "#5A2121", "K12": "#FD4E6A", "C04": "#F35744", 
+    "C09": "#FFA9AD", "C10": "#D30022", "K18": "#FEC2A6", "K19": "#E69C79", "K20": "#D37C46", 
+    "K21": "#C1444A", "K22": "#CD9391", "K23": "#F7B4C6", "K24": "#FDC0D0", "K25": "#F67E66", 
+    "K26": "#E698AA", "K27": "#E54B4F", "Z02": "#FFE2CE", "Z05": "#FFC4AA", "Z06": "#F4C3A5", 
+    "Z08": "#E1B383", "Z10": "#EDB045", "Z11": "#E99C17", "Z18": "#9D5B3E", "Z22": "#753B32", 
+    "Z09": "#E6B483", "Z15": "#D98C39", "Z07": "#E0C593", "Z13": "#FFC890", "Z14": "#B7714A", 
+    "Z17": "#8D614C", "Z04": "#FCF9E0", "Z03": "#F2D9BA", "Z16": "#7B524B", "Z01": "#FFE4CC", 
+    "Z12": "#E07935", "Z19": "#A94023", "Z24": "#B88558", "A02": "#FDFBFF", "A01": "#FEFFFF", 
+    "B03": "#B6B1BA", "B05": "#89858C", "B06": "#48464E", "B07": "#2F2B2F", "B09": "#000000", 
+    "B01": "#E7D6DB", "B02": "#EDEDED", "B04": "#EEE9EA", "B08": "#CECDD5", "A04": "#FFF5ED", 
+    "A03": "#F5ECD2", "A06": "#CFD7D3", "A05": "#98A6A8", "A07": "#1D1414", "A01": "#F1EDED", 
+    "A03": "#FFFDF0", "A05": "#F6EFE2", "A06": "#949FA3", "A07": "#FFFBE1", "A08": "#CACAD4", 
+    "A09": "#9A9D94", "Y01": "#BCC6B8", "Y02": "#8AA386", "Y03": "#697D80", "Y04": "#E3D2BC", 
+    "Y05": "#D0CCAA", "Y06": "#B0A782", "Y07": "#B4A497", "Y08": "#B38281", "Y09": "#A58767", 
+    "Y10": "#C5B2BC", "Y11": "#9F7594", "Y12": "#644749", "Y13": "#D19066", "Y14": "#C77362", 
+    "Y15": "#757D7B", "M01": "#FCF7F8", "M02": "#B0A9AC", "M03": "#AFDCAB", "M04": "#FEA49F", 
+    "M05": "#EE8C3E", "M06": "#5FD0A7", "M07": "#EB9270", "M08": "#F0D958", "M09": "#D9D9D9", 
+    "M10": "#D9C7EA", "M11": "#F3ECC9", "M12": "#E6EEF2", "M13": "#AACBEF", "M14": "#3376B0", 
+    "M15": "#668575", "M16": "#FEBF45", "M17": "#FEA324", "M18": "#FEB89F", "M19": "#FFE0E9", 
+    "M20": "#FEBECF", "M21": "#ECBEBF", "M22": "#E4A89F", "M23": "#A56268", "W3": "#F2A5E8", 
+    "W4": "#E9EC91", "W1": "#FFFF00", "W2": "#FFEBFA", "W5": "#76CEDE", "L01": "#D50D21", 
+    "L02": "#F92F83", "L03": "#FD8324", "L04": "#F8EC31", "L05": "#35C75B", "L06": "#23B891", 
+    "L07": "#19779D", "L08": "#1A60C3", "L09": "#9A56B4", "L10": "#FFDB4C", "L11": "#FFEBFA", 
+    "L12": "#D8D5CE", "L13": "#55514C", "S1": "#9FE4DF", "S5": "#77CEE9", "S4": "#3ECFCA", 
+    "S11": "#4A867A", "S13": "#7FCD9D", "S6": "#CDE55D", "S8": "#E8C7B4", "S15": "#AD6F3C", 
+    "S12": "#6C372F", "S14": "#FEB872", "S9": "#F3C1C0", "S4": "#C9675E", "S11": "#D293BE", 
+    "S8": "#EA8CB1", "S10": "#9C87D6", "L06": "#FFFFFF", "N01": "#FD6FB4", "N02": "#F24B94", 
+    "N03": "#D7FAA0", "N04": "#8BDBFA", "N05": "#E987EA", "GB1": "#DAABB3", "GB2": "#D6AA87", 
+    "GB3": "#C1BD8D", "GB4": "#96B69F", "GB5": "#849DC6", "GB6": "#94BFE2", "GB7": "#E2A9D2", 
+    "GB8": "#AB91C0"
+};
 
-const ALL_COLOR_KEYS = Object.keys(MARD_COLORS_FULL);
+// 漫漫色板
+const MANMAN_COLORS = {
+    "E2": "#FAF4C8", "B1": "#FFFFD5", "B2": "#FEFF8B", "B3": "#FBED56", "B4": "#F4D738", 
+    "B5": "#FEAC4C", "B6": "#FE8B4C", "B10": "#FFDA45", "B11": "#FF995B", "B12": "#F77C31", 
+    "E11": "#FFDD99", "A18": "#FE9F72", "B13": "#FFC365", "B14": "#FD543D", "B15": "#FFF365", 
+    "IC04": "#FFFF9F", "IC9": "#FFE36E", "IC14": "#FEBE7D", "IC15": "#FD7C72", "Q6": "#FFD568", 
+    "R07": "#FFE395", "R06": "#F4F57D", "R08": "#E6C9B7", "G3": "#F7F8A2", "G4": "#FFD67D", 
+    "G5": "#FFC830", "C1": "#E6EE31", "C2": "#63F347", "C7": "#9EF780", "C3": "#5DE035", 
+    "C4": "#35E352", "C9": "#65E2A6", "C10": "#3DAF80", "C5": "#1C9C4F", "C6": "#27523A", 
+    "C11": "#95D3C2", "C12": "#5D722A", "C13": "#166F41", "C14": "#CAEB7B", "C15": "#ADE946", 
+    "C16": "#2E5132", "C17": "#C5ED9C", "C18": "#9BB13A", "C19": "#E6EE49", "DH15": "#24B88C", 
+    "DH10": "#C2F0CC", "DH2": "#156A6B", "DH7": "#0B3C43", "DH12": "#303A21", "IC5": "#EEFCA5", 
+    "Q13": "#4E846D", "Q7": "#8D7A35", "R10": "#CCE1AF", "R11": "#9EE5B9", "R09": "#C5E254", 
+    "G6": "#E2FCB1", "G7": "#B0E792", "G12": "#9CAB5A", "C8": "#E8FFE7", "D1": "#A9F9FC", 
+    "D2": "#A0E2FB", "D3": "#41CCFF", "D7": "#01ACEB", "D4": "#50AAF0", "D9": "#0F54C0", 
+    "N5": "#324BCA", "D25": "#3EBCE2", "D28": "#28DDDE", "D26": "#1C334D", "D30": "#CDE8FF", 
+    "D29": "#D5FDFF", "D31": "#22C4C6", "D32": "#1557A8", "D36": "#04D1F6", "DH6": "#1D3344", 
+    "DH9": "#1887A2", "DH14": "#176DAF", "IC3": "#BEDDFF", "Q11": "#67B4BE", "R13": "#C8E2FF", 
+    "R14": "#7CC4FF", "R12": "#A9E5E5", "R15": "#3CAED8", "G13": "#D3DFFA", "G14": "#BBCFED", 
+    "G15": "#34488E", "D5": "#AEB4F2", "D6": "#858EDD", "D10": "#2F54AF", "D11": "#182A84", 
+    "D13": "#B843C5", "D14": "#AC7BDE", "D16": "#8854B3", "D17": "#E2D3FF", "D19": "#D5B9F8", 
+    "D15": "#361B51", "D20": "#B9BAE1", "D21": "#DE9AD4", "D22": "#B90095", "D23": "#8B279B", 
+    "D24": "#2F1F90", "D18": "#E3E1EE", "D27": "#C4D4F6", "D33": "#A45EC7", "D34": "#D8C3D7", 
+    "D35": "#9C32B2", "DH1": "#9A009B", "DH8": "#333A95", "IC8": "#EBDAFC", "Q14": "#7786E5", 
+    "Q15": "#494FC7", "R01": "#DFC2F8", "E1": "#FDD3CC", "E9": "#FEC0DF", "E10": "#FFB7E7", 
+    "E21": "#E8649E", "E15": "#F551A2", "E16": "#F13D74", "E17": "#C63478", "E18": "#FFDBE9", 
+    "E19": "#E970CC", "E20": "#D33793", "E23": "#FCDDD2", "E24": "#F78FC3", "E25": "#B5006D", 
+    "E26": "#FFD1BA", "E27": "#F8C7C9", "E28": "#FFF3EB", "E29": "#FFE2EA", "E30": "#FFC7DB", 
+    "E31": "#FEBAD5", "E32": "#D8C7D1", "E33": "#BD9DA1", "E34": "#B785A1", "E35": "#937A8D", 
+    "E36": "#FFFF00", "A1": "#FD957B", "A2": "#FC3D46", "A3": "#F74941", "A4": "#FC283C", 
+    "A5": "#E7002F", "A6": "#943630", "A7": "#971937", "A8": "#BC0028", "A9": "#E2677A", 
+    "A10": "#8A4526", "A11": "#5A2121", "A12": "#FD4E6A", "A13": "#F35744", "A14": "#FFA9AD", 
+    "A15": "#D30022", "A16": "#FEC2A6", "A17": "#E69C79", "A18": "#D37C46", "A19": "#C1444A", 
+    "A20": "#CD9391", "A21": "#F7B4C6", "A22": "#FDC0D0", "A23": "#F67E66", "A24": "#E698AA", 
+    "A25": "#E54B4F", "E3": "#FFE2CE", "E4": "#FFC4AA", "E5": "#F4C3A5", "E6": "#E1B383", 
+    "E7": "#EDB045", "E8": "#E99C17", "E9": "#9D5B3E", "E10": "#753B32", "E12": "#E6B483", 
+    "E13": "#D98C39", "E14": "#E0C593", "E15": "#FFC890", "E16": "#B7714A", "E17": "#8D614C", 
+    "E18": "#FCF9E0", "E19": "#F2D9BA", "E20": "#7B524B", "E21": "#FFE4CC", "E22": "#E07935", 
+    "E23": "#A94023", "E24": "#B88558", "F1": "#FDFBFF", "F2": "#FEFFFF", "F3": "#B6B1BA", 
+    "F4": "#89858C", "F5": "#48464E", "F6": "#2F2B2F", "F7": "#000000", "F8": "#E7D6DB", 
+    "F9": "#EDEDED", "F10": "#EEE9EA", "F11": "#CECDD5", "F12": "#FFF5ED", "F13": "#F5ECD2", 
+    "F14": "#CFD7D3", "F15": "#98A6A8", "F16": "#1D1414", "F17": "#F1EDED", "F18": "#FFFDF0", 
+    "F19": "#F6EFE2", "F20": "#949FA3", "F21": "#FFFBE1", "F22": "#CACAD4", "F23": "#9A9D94", 
+    "YX11": "#BCC6B8", "YX12": "#8AA386", "YX2": "#697D80", "YX15": "#E3D2BC", "YX6": "#D0CCAA", 
+    "YX1": "#B0A782", "YX13": "#B4A497", "YX14": "#B38281", "YX10": "#A58767", "YX9": "#C5B2BC", 
+    "YX4": "#9F7594", "YX5": "#644749", "YX8": "#D19066", "YX3": "#C77362", "YX7": "#757D7B", 
+    "P1": "#FCF7F8", "P2": "#B0A9AC", "P4": "#AFDCAB", "P5": "#FEA49F", "P3": "#EE8C3E", 
+    "P8": "#5FD0A7", "P6": "#EB9270", "P7": "#F0D958", "P13": "#D9D9D9", "P18": "#D9C7EA", 
+    "P9": "#F3ECC9", "P12": "#E6EEF2", "P17": "#AACBEF", "P22": "#3376B0", "P23": "#668575", 
+    "P14": "#FEBF45", "P19": "#FEA324", "P11": "#FEB89F", "P10": "#FFE0E9", "P15": "#FEBECF", 
+    "P20": "#ECBEBF", "P16": "#E4A89F", "P21": "#A56268", "W3": "#F2A5E8", "W4": "#E9EC91", 
+    "W1": "#FFFF00", "W2": "#FFEBFA", "W5": "#76CEDE", "T1": "#D50D21", "N1": "#F92F83", 
+    "N2": "#FD8324", "N3": "#F8EC31", "N4": "#35C75B", "T4": "#23B891", "T5": "#19779D", 
+    "T3": "#1A60C3", "T2": "#9A56B4", "T6": "#FFDB4C", "L2": "#FFEBFA", "L6": "#D8D5CE", 
+    "L7": "#55514C", "S1": "#9FE4DF", "S5": "#77CEE9", "S4": "#3ECFCA", "S11": "#4A867A", 
+    "S13": "#7FCD9D", "S6": "#CDE55D", "S8": "#E8C7B4", "S15": "#AD6F3C", "S12": "#6C372F", 
+    "S14": "#FEB872", "S9": "#F3C1C0", "S4": "#C9675E", "S11": "#D293BE", "S8": "#EA8CB1", 
+    "S10": "#9C87D6", "L6": "#FFFFFF", "Y1": "#FD6FB4", "Y2": "#F24B94", "Y3": "#D7FAA0", 
+    "Y4": "#8BDBFA", "Y5": "#E987EA", "ZG1": "#DAABB3", "ZG2": "#D6AA87", "ZG3": "#C1BD8D", 
+    "ZG4": "#96B69F", "ZG5": "#849DC6", "ZG6": "#94BFE2", "ZG7": "#E2A9D2", "ZG8": "#AB91C0"
+};
 
-const COLOR_PRESETS = {
+// 盼盼色板
+const PANPAN_COLORS = {
+    "65": "#FAF4C8", "2": "#FFFFD5", "28": "#FEFF8B", "3": "#FBED56", "79": "#F4D738", 
+    "29": "#FEAC4C", "4": "#FE8B4C", "98": "#FFDA45", "96": "#FF995B", "97": "#F77C31", 
+    "109": "#FFDD99", "110": "#FE9F72", "116": "#FFC365", "135": "#FD543D", "150": "#FFF365", 
+    "150A": "#FFFF9F", "213": "#FFE36E", "208": "#FEBE7D", "218": "#FD7C72", "242": "#FFD568", 
+    "276": "#FFE395", "255": "#F4F57D", "259": "#E6C9B7", "288": "#F7F8A2", "289": "#FFD67D", 
+    "290": "#FFC830", "48": "#E6EE31", "33": "#63F347", "26": "#9EF780", "78": "#5DE035", 
+    "82": "#35E352", "11": "#65E2A6", "44": "#3DAF80", "10": "#1C9C4F", "84": "#27523A", 
+    "103": "#95D3C2", "106": "#5D722A", "111": "#166F41", "119": "#CAEB7B", "117": "#ADE946", 
+    "122": "#2E5132", "113": "#C5ED9C", "141": "#9BB13A", "133": "#E6EE49", "174": "#24B88C", 
+    "175": "#C2F0CC", "194": "#156A6B", "193": "#0B3C43", "192": "#303A21", "207": "#EEFCA5", 
+    "191": "#4E846D", "178": "#8D7A35", "180": "#CCE1AF", "188": "#9EE5B9", "187": "#C5E254", 
+    "185": "#E2FCB1", "179": "#B0E792", "176": "#9CAB5A", "76": "#E8FFE7", "30": "#A9F9FC", 
+    "75": "#A0E2FB", "80": "#41CCFF", "34": "#01ACEB", "25": "#50AAF0", "9": "#3677D2", 
+    "52": "#0F54C0", "71": "#324BCA", "42": "#3EBCE2", "76A": "#28DDDE", "80A": "#1C334D", 
+    "82": "#CDE8FF", "93": "#D5FDFF", "90": "#22C4C6", "97": "#1557A8", "99": "#04D1F6", 
+    "106": "#1D3344", "111": "#1887A2", "104": "#176DAF", "105": "#BEDDFF", "121": "#67B4BE", 
+    "130": "#C8E2FF", "122": "#7CC4FF", "113": "#A9E5E5", "127": "#3CAED8", "126": "#D3DFFA", 
+    "112": "#BBCFED", "118": "#34488E", "46": "#AEB4F2", "36": "#858EDD", "8": "#2F54AF", 
+    "75A": "#182A84", "32": "#B843C5", "27": "#AC7BDE", "7": "#8854B3", "92": "#E2D3FF", 
+    "91": "#D5B9F8", "105A": "#361B51", "104A": "#B9BAE1", "106A": "#DE9AD4", "111A": "#B90095", 
+    "108A": "#8B279B", "118A": "#2F1F90", "126A": "#E3E1EE", "125A": "#C4D4F6", "128A": "#A45EC7", 
+    "119A": "#D8C3D7", "131A": "#9C32B2", "136A": "#9A009B", "134A": "#333A95", "139A": "#EBDAFC", 
+    "136B": "#7786E5", "141B": "#494FC7", "133B": "#DFC2F8", "18": "#FDD3CC", "38": "#FEC0DF", 
+    "62": "#FFB7E7", "74A": "#E8649E", "40": "#F551A2", "41": "#F13D74", "20": "#C63478", 
+    "84A": "#FFDBE9", "103": "#E970CC", "94": "#D33793", "95": "#FCDDD2", "87": "#F78FC3", 
+    "102": "#B5006D", "115": "#FFD1BA", "114": "#F8C7C9", "123": "#FFF3EB", "121": "#FFE2EA", 
+    "130": "#FFC7DB", "124": "#FEBAD5", "131": "#D8C7D1", "116": "#BD9DA1", "115": "#B785A1", 
+    "118": "#937A8D", "143": "#FFFF00", "35": "#FD957B", "31": "#FC3D46", "53": "#F74941", 
+    "54": "#FC283C", "73": "#E7002F", "79A": "#943630", "84A": "#971937", "103A": "#BC0028", 
+    "106A": "#E2677A", "78A": "#8A4526", "83A": "#5A2121", "94A": "#FD4E6A", "89A": "#F35744", 
+    "96A": "#FFA9AD", "100A": "#D30022", "109A": "#FEC2A6", "110A": "#E69C79", "112A": "#D37C46", 
+    "118A": "#C1444A", "126A": "#CD9391", "131A": "#F7B4C6", "124A": "#FDC0D0", "134A": "#F67E66", 
+    "138A": "#E698AA", "135A": "#E54B4F", "76B": "#FFE2CE", "81": "#FFC4AA", "92": "#F4C3A5", 
+    "100B": "#E1B383", "109B": "#EDB045", "110B": "#E99C17", "116B": "#9D5B3E", "115B": "#753B32", 
+    "99B": "#E6B483", "106B": "#D98C39", "102B": "#E0C593", "109B": "#FFC890", "117B": "#B7714A", 
+    "129B": "#8D614C", "149": "#FCF9E0", "147": "#F2D9BA", "151": "#7B524B", "154": "#FFE4CC", 
+    "116B": "#E07935", "135B": "#A94023", "139B": "#B88558", "15": "#FDFBFF", "1": "#FEFFFF", 
+    "13": "#B6B1BA", "78B": "#89858C", "83B": "#48464E", "85": "#2F2B2F", "86": "#000000", 
+    "45": "#E7D6DB", "51": "#EDEDED", "70": "#EEE9EA", "69": "#CECDD5", "123": "#FFF5ED", 
+    "121": "#F5ECD2", "130": "#CFD7D3", "122": "#98A6A8", "144": "#1D1414", "142": "#F1EDED", 
+    "141": "#FFFDF0", "143": "#F6EFE2", "132": "#949FA3", "146": "#FFFBE1", "145": "#CACAD4", 
+    "140": "#9A9D94", "168": "#BCC6B8", "172": "#8AA386", "166": "#697D80", "167": "#E3D2BC", 
+    "159": "#D0CCAA", "169": "#B0A782", "171": "#B4A497", "177": "#B38281", "170": "#A58767", 
+    "164": "#C5B2BC", "161": "#9F7594", "173": "#644749", "160": "#D19066", "162": "#C77362", 
+    "163": "#757D7B", "71": "#FCF7F8", "62": "#B0A9AC", "66": "#AFDCAB", "64": "#FEA49F", 
+    "63": "#EE8C3E", "65": "#5FD0A7", "68": "#EB9270", "67": "#F0D958", "70": "56/56", 
+    "65A": "157/70", "68A": "159/68", "67A": "158/67", "195": "#D9D9D9", "187": "#D9C7EA", 
+    "185": "#F3ECC9", "190": "#E6EEF2", "193": "#AACBEF", "183": "#3376B0", "184": "#668575", 
+    "182": "#FEBF45", "179": "#FEA324", "180": "#FEB89F", "188": "#FFE0E9", "186": "#FEBECF", 
+    "189": "#ECBEBF", "180": "#E4A89F", "181": "#A56268", "109": "#F2A5E8", "111": "#E9EC91", 
+    "107": "#FFFF00", "110": "#FFEBFA", "108": "#76CEDE", "67": "#D50D21", "52": "#F92F83", 
+    "54": "#FD8324", "56": "#F8EC31", "55": "#35C75B", "69": "#23B891", "55A": "#19779D", 
+    "54A": "#1A60C3", "56A": "#9A56B4", "151": "#FFDB4C", "152": "#FFEBFA", "151A": "#D8D5CE", 
+    "152A": "#55514C", "231": "#9FE4DF", "237": "#77CEE9", "224": "#3ECFCA", "233": "#4A867A", 
+    "222": "#7FCD9D", "227": "#CDE55D", "230": "#E8C7B4", "221": "#AD6F3C", "226": "#6C372F", 
+    "219": "#FEB872", "228": "#F3C1C0", "225": "#C9675E", "232": "#D293BE", "221A": "#EA8CB1", 
+    "227A": "#9C87D6", "155": "#FFFFFF", "59": "#FD6FB4", "60": "#F24B94", "57": "#D7FAA0", 
+    "58": "#8BDBFA", "61": "#E987EA", "254": "#DAABB3", "255": "#D6AA87", "256": "#C1BD8D", 
+    "257": "#96B69F", "258": "#849DC6", "259": "#94BFE2", "260": "#E2A9D2", "261": "#AB91C0"
+};
+
+// 咪小窝色板
+const MIXIAOWO_COLORS = {
+    "77": "#FAF4C8", "2": "#FFFFD5", "28": "#FEFF8B", "3": "#FBED56", "79": "#F4D738", 
+    "29": "#FEAC4C", "4": "#FE8B4C", "98": "#FFDA45", "96": "#FF995B", "97": "#F77C31", 
+    "109": "#FFDD99", "110": "#FE9F72", "116": "#FFC365", "135": "#FD543D", "150": "#FFF365", 
+    "150A": "#FFFF9F", "213": "#FFE36E", "208": "#FEBE7D", "218": "#FD7C72", "242": "#FFD568", 
+    "261": "#FFE395", "255": "#F4F57D", "259": "#E6C9B7", "273": "#F7F8A2", "274": "#FFD67D", 
+    "275": "#FFC830", "48": "#E6EE31", "33": "#63F347", "26": "#9EF780", "78": "#5DE035", 
+    "82": "#35E352", "11": "#65E2A6", "44": "#3DAF80", "10": "#1C9C4F", "84": "#27523A", 
+    "103": "#95D3C2", "106": "#5D722A", "111": "#166F41", "119": "#CAEB7B", "117": "#ADE946", 
+    "122": "#2E5132", "113": "#C5ED9C", "141": "#9BB13A", "133": "#E6EE49", "174": "#24B88C", 
+    "175": "#C2F0CC", "194": "#156A6B", "193": "#0B3C43", "192": "#303A21", "207": "#EEFCA5", 
+    "191": "#4E846D", "178": "#8D7A35", "180": "#CCE1AF", "188": "#9EE5B9", "187": "#C5E254", 
+    "185": "#E2FCB1", "179": "#B0E792", "176": "#9CAB5A", "76": "#E8FFE7", "30": "#A9F9FC", 
+    "75": "#A0E2FB", "80": "#41CCFF", "34": "#01ACEB", "25": "#50AAF0", "9": "#3677D2", 
+    "52": "#0F54C0", "71": "#324BCA", "42": "#3EBCE2", "76A": "#28DDDE", "80A": "#1C334D", 
+    "82": "#CDE8FF", "93": "#D5FDFF", "90": "#22C4C6", "97": "#1557A8", "99": "#04D1F6", 
+    "106": "#1D3344", "111": "#1887A2", "104": "#176DAF", "105": "#BEDDFF", "121": "#67B4BE", 
+    "130": "#C8E2FF", "122": "#7CC4FF", "113": "#A9E5E5", "127": "#3CAED8", "126": "#D3DFFA", 
+    "112": "#BBCFED", "118": "#34488E", "46": "#AEB4F2", "36": "#858EDD", "8": "#2F54AF", 
+    "75A": "#182A84", "32": "#B843C5", "27": "#AC7BDE", "7": "#8854B3", "92": "#E2D3FF", 
+    "91": "#D5B9F8", "105A": "#361B51", "104A": "#B9BAE1", "106A": "#DE9AD4", "111A": "#B90095", 
+    "108A": "#8B279B", "118A": "#2F1F90", "126A": "#E3E1EE", "125A": "#C4D4F6", "128A": "#A45EC7", 
+    "119A": "#D8C3D7", "131A": "#9C32B2", "136A": "#9A009B", "134A": "#333A95", "139A": "#EBDAFC", 
+    "136B": "#7786E5", "141B": "#494FC7", "133B": "#DFC2F8", "18": "#FDD3CC", "38": "#FEC0DF", 
+    "62": "#FFB7E7", "74A": "#E8649E", "40": "#F551A2", "41": "#F13D74", "20": "#C63478", 
+    "84A": "#FFDBE9", "103": "#E970CC", "94": "#D33793", "95": "#FCDDD2", "87": "#F78FC3", 
+    "102": "#B5006D", "115": "#FFD1BA", "114": "#F8C7C9", "123": "#FFF3EB", "121": "#FFE2EA", 
+    "130": "#FFC7DB", "124": "#FEBAD5", "131": "#D8C7D1", "116": "#BD9DA1", "115": "#B785A1", 
+    "118": "#937A8D", "143": "#FFFF00", "35": "#FD957B", "31": "#FC3D46", "53": "#F74941", 
+    "54": "#FC283C", "73": "#E7002F", "79A": "#943630", "84A": "#971937", "103A": "#BC0028", 
+    "106A": "#E2677A", "78A": "#8A4526", "83A": "#5A2121", "94A": "#FD4E6A", "89A": "#F35744", 
+    "96A": "#FFA9AD", "100A": "#D30022", "109A": "#FEC2A6", "110A": "#E69C79", "112A": "#D37C46", 
+    "118A": "#C1444A", "126A": "#CD9391", "131A": "#F7B4C6", "124A": "#FDC0D0", "134A": "#F67E66", 
+    "138A": "#E698AA", "135A": "#E54B4F", "76B": "#FFE2CE", "81": "#FFC4AA", "92": "#F4C3A5", 
+    "100B": "#E1B383", "109B": "#EDB045", "110B": "#E99C17", "116B": "#9D5B3E", "115B": "#753B32", 
+    "99B": "#E6B483", "106B": "#D98C39", "102B": "#E0C593", "109B": "#FFC890", "117B": "#B7714A", 
+    "129B": "#8D614C", "149": "#FCF9E0", "147": "#F2D9BA", "151": "#7B524B", "154": "#FFE4CC", 
+    "116B": "#E07935", "135B": "#A94023", "139B": "#B88558", "15": "#FDFBFF", "1": "#FEFFFF", 
+    "13": "#B6B1BA", "78B": "#89858C", "83B": "#48464E", "85": "#2F2B2F", "86": "#000000", 
+    "45": "#E7D6DB", "51": "#EDEDED", "70": "#EEE9EA", "69": "#CECDD5", "123": "#FFF5ED", 
+    "121": "#F5ECD2", "130": "#CFD7D3", "122": "#98A6A8", "144": "#1D1414", "142": "#F1EDED", 
+    "141": "#FFFDF0", "143": "#F6EFE2", "132": "#949FA3", "146": "#FFFBE1", "145": "#CACAD4", 
+    "140": "#9A9D94", "168": "#BCC6B8", "172": "#8AA386", "166": "#697D80", "167": "#E3D2BC", 
+    "159": "#D0CCAA", "169": "#B0A782", "171": "#B4A497", "177": "#B38281", "170": "#A58767", 
+    "164": "#C5B2BC", "161": "#9F7594", "173": "#644749", "160": "#D19066", "162": "#C77362", 
+    "163": "#757D7B", "71": "#FCF7F8", "62": "#B0A9AC", "66": "#AFDCAB", "64": "#FEA49F", 
+    "63": "#EE8C3E", "65": "#5FD0A7", "68": "#EB9270", "67": "#F0D958", "70": "56/56", 
+    "65A": "157/70", "68A": "159/68", "67A": "158/67", "195": "#D9D9D9", "187": "#D9C7EA", 
+    "185": "#F3ECC9", "190": "#E6EEF2", "193": "#AACBEF", "183": "#3376B0", "184": "#668575", 
+    "182": "#FEBF45", "179": "#FEA324", "180": "#FEB89F", "188": "#FFE0E9", "186": "#FEBECF", 
+    "189": "#ECBEBF", "180": "#E4A89F", "181": "#A56268", "109": "#F2A5E8", "111": "#E9EC91", 
+    "107": "#FFFF00", "110": "#FFEBFA", "108": "#76CEDE", "67": "#D50D21", "52": "#F92F83", 
+    "54": "#FD8324", "56": "#F8EC31", "55": "#35C75B", "69": "#23B891", "55A": "#19779D", 
+    "54A": "#1A60C3", "56A": "#9A56B4", "151": "#FFDB4C", "152": "#FFEBFA", "151A": "#D8D5CE", 
+    "152A": "#55514C", "231": "#9FE4DF", "237": "#77CEE9", "224": "#3ECFCA", "233": "#4A867A", 
+    "222": "#7FCD9D", "227": "#CDE55D", "230": "#E8C7B4", "221": "#AD6F3C", "226": "#6C372F", 
+    "219": "#FEB872", "228": "#F3C1C0", "225": "#C9675E", "232": "#D293BE", "221A": "#EA8CB1", 
+    "227A": "#9C87D6", "155": "#FFFFFF", "59": "#FD6FB4", "60": "#F24B94", "57": "#D7FAA0", 
+    "58": "#8BDBFA", "61": "#E987EA", "254": "#DAABB3", "255": "#D6AA87", "256": "#C1BD8D", 
+    "257": "#96B69F", "258": "#849DC6", "259": "#94BFE2", "260": "#E2A9D2", "261": "#AB91C0"
+};
+
+// 五个品牌的颜色数据
+const BRAND_COLORS = {
+    'MARD': MARD_COLORS_FULL,
+    'COCO': COCO_COLORS,
+    '漫漫': MANMAN_COLORS,
+    '盼盼': PANPAN_COLORS,
+    '咪小窝': MIXIAOWO_COLORS
+};
+
+// 获取所有品牌的颜色键
+const ALL_COLOR_KEYS = {
+    'MARD': Object.keys(MARD_COLORS_FULL),
+    'COCO': Object.keys(COCO_COLORS),
+    '漫漫': Object.keys(MANMAN_COLORS),
+    '盼盼': Object.keys(PANPAN_COLORS),
+    '咪小窝': Object.keys(MIXIAOWO_COLORS)
+};
+
+// MARD颜色预设
+const MARD_COLOR_PRESETS = {
     '入门10色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1'],
     '标准20色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4'],
     '进阶30色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4', 'A1','B2','C4','D7','E2','F4','G2','M1','R2'],
     '专业50色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4', 'A1','B2','C4','D7','E2','F4','G2','M1','R2', 'A2','B3','C6','D8','E4','F6','G3','M2','R3','P2','A3','B4','C7','D9','E5','F7','G4','M3','R4','P4'],
-    '大师100色': Array.from({length: 100}, (_, i) => ALL_COLOR_KEYS[i % ALL_COLOR_KEYS.length]),
-    '全色系291色': ALL_COLOR_KEYS
+    '大师100色': Array.from({length: 100}, (_, i) => ALL_COLOR_KEYS.MARD[i % ALL_COLOR_KEYS.MARD.length]),
+    '全色系291色': ALL_COLOR_KEYS.MARD
 };
+
+// Background colors to be removed
+const BACKGROUND_COLOR_KEYS = ['T1', 'H1', 'H2'];
 
 // --- DOM Elements ---
 const sidebar = document.getElementById('sidebar'); 
 const menuToggle = document.getElementById('menu-toggle');
 const fileInput = document.getElementById('file-input'); 
 const uploadArea = document.getElementById('upload-area');
+const brandButtons = document.getElementById('brand-buttons');
 const presetButtons = document.getElementById('preset-buttons'); 
 const customColorSection = document.getElementById('custom-color-section'); 
 const customColorGrid = document.getElementById('custom-color-grid');
@@ -1117,10 +1474,17 @@ const colorPickerClose = document.getElementById('color-picker-close');
 const colorPickerGrid = document.getElementById('color-picker-grid');
 const replaceColorBtn = document.getElementById('replace-color-btn');
 
+// Line enhancement elements
+const useLineEnhance = document.getElementById('useLineEnhance');
+const lineStrengthSection = document.getElementById('lineStrengthSection');
+const lineStrength = document.getElementById('lineStrength');
+const lineStrengthValue = document.getElementById('lineStrengthValue');
+
 // --- State Management ---
 let state = {
     originalImage: null,
-    activePalette: COLOR_PRESETS['全色系291色'],
+    currentBrand: 'MARD', // 默认选择MARD品牌
+    activePalette: MARD_COLOR_PRESETS['全色系291色'],
     customPalette: new Set(),
     excludedColors: new Set(),
     colorData: [], // 2D array of color codes
@@ -1141,10 +1505,76 @@ let state = {
     granularity: 64,
     processingMode: '未处理',
     mergedRegions: 0,
-    backgroundRemoved: '未执行'
+    backgroundRemoved: '未执行',
+    lineEnhance: false,
+    lineStrength: 3
 };
 
 // --- Core Algorithms ---
+
+// 修复的线条增强处理函数 - 只对图片的描边和边缘进行增强
+const applyLineEnhancement = (imageData, strength) => {
+    console.log(`应用线条增强，强度: ${strength}`);
+    
+    // 创建图像数据的副本
+    const enhancedData = new ImageData(
+        new Uint8ClampedArray(imageData.data),
+        imageData.width,
+        imageData.height
+    );
+    
+    const width = imageData.width;
+    const height = imageData.height;
+    const data = enhancedData.data;
+    const originalData = imageData.data;
+    
+    // Sobel算子
+    const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+    const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+    
+    // 遍历每个像素，只处理边缘区域
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            const idx = (y * width + x) * 4;
+            
+            // 计算当前像素的梯度
+            let pixelX = 0;
+            let pixelY = 0;
+            
+            // 应用Sobel算子
+            for (let j = -1; j <= 1; j++) {
+                for (let i = -1; i <= 1; i++) {
+                    const nIdx = ((y + j) * width + (x + i)) * 4;
+                    const gray = originalData[nIdx] * 0.299 + originalData[nIdx + 1] * 0.587 + originalData[nIdx + 2] * 0.114;
+                    const kernelIdx = (j + 1) * 3 + (i + 1);
+                    pixelX += gray * sobelX[kernelIdx];
+                    pixelY += gray * sobelY[kernelIdx];
+                }
+            }
+            
+            // 计算梯度幅值
+            const magnitude = Math.sqrt(pixelX * pixelX + pixelY * pixelY);
+            
+            // 设置边缘检测阈值，只对边缘进行增强
+            const edgeThreshold = 30 + (strength * 5); // 基础阈值 + 强度调节
+            
+            if (magnitude > edgeThreshold) {
+                // 只对边缘像素进行增强
+                const factor = Math.min(2.0, 1 + (strength / 5)); // 边缘增强因子
+                data[idx] = Math.min(255, originalData[idx] * factor);
+                data[idx + 1] = Math.min(255, originalData[idx + 1] * factor);
+                data[idx + 2] = Math.min(255, originalData[idx + 2] * factor);
+            } else {
+                // 非边缘区域保持原样
+                data[idx] = originalData[idx];
+                data[idx + 1] = originalData[idx + 1];
+                data[idx + 2] = originalData[idx + 2];
+            }
+        }
+    }
+    
+    return enhancedData;
+};
 
 // Euclidean distance between two RGB colors
 const getDistance = (c1, c2) => {
@@ -1209,15 +1639,32 @@ const findClosestColor = (targetRgb, palette) => {
     let minDistance = Infinity;
     let closestColor = null;
     
-    for (const colorKey of palette) {
-        const color = MARD_COLORS_FULL[colorKey];
-        const rgb = hexToRgb(color);
-        const distance = getDistance(targetRgb, rgb);
-        
-        if (distance < minDistance) {
-            minDistance = distance;
-            closestColor = colorKey;
+    try {
+        for (const colorKey of palette) {
+            // 确保颜色键存在
+            if (!colorKey) continue;
+            
+            const color = BRAND_COLORS[state.currentBrand][colorKey];
+            if (!color) {
+                console.warn(`颜色 ${colorKey} 在品牌 ${state.currentBrand} 中不存在`);
+                continue;
+            }
+            
+            const rgb = hexToRgb(color);
+            if (!rgb) {
+                console.warn(`无法解析颜色 ${colorKey} 的十六进制值: ${color}`);
+                continue;
+            }
+            
+            const distance = getDistance(targetRgb, rgb);
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestColor = colorKey;
+            }
         }
+    } catch (error) {
+        console.error('在查找最近颜色时出错:', error);
     }
     
     return closestColor;
@@ -1288,8 +1735,8 @@ const mergeSimilarRegions = (data, width, height, threshold) => {
                         if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                             const adjacentColor = data[ny][nx];
                             if (adjacentColor !== currentColor) {
-                                const color1 = hexToRgb(MARD_COLORS_FULL[currentColor]);
-                                const color2 = hexToRgb(MARD_COLORS_FULL[adjacentColor]);
+                                const color1 = hexToRgb(BRAND_COLORS[state.currentBrand][currentColor]);
+                                const color2 = hexToRgb(BRAND_COLORS[state.currentBrand][adjacentColor]);
                                 const distance = getDistance(color1, color2);
                                 
                                 if (distance < threshold) {
@@ -1389,7 +1836,7 @@ const remapExcludedColors = (data, excludedColors, availableColors) => {
             for (let x = 0; x < result[y].length; x++) {
                 if (result[y][x] === excludedColor) {
                     // Find closest color from target palette
-                    const excludedRgb = hexToRgb(MARD_COLORS_FULL[excludedColor]);
+                    const excludedRgb = hexToRgb(BRAND_COLORS[state.currentBrand][excludedColor]);
                     const newColor = findClosestColor(excludedRgb, targetPalette);
                     if (newColor) {
                         result[y][x] = newColor;
@@ -1496,6 +1943,20 @@ const processImage = async () => {
     progressText.textContent = '初始化...';
     
     try {
+        // 检查当前品牌和色板
+        console.log('当前品牌:', state.currentBrand);
+        console.log('活动色板大小:', state.activePalette.length);
+        
+        // 验证活动色板
+        if (!state.activePalette || state.activePalette.length === 0) {
+            throw new Error('活动色板为空');
+        }
+        
+        // 验证品牌颜色数据
+        if (!BRAND_COLORS[state.currentBrand]) {
+            throw new Error(`品牌 ${state.currentBrand} 的颜色数据不存在`);
+        }
+        
         // Create canvas for image data
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -1508,30 +1969,81 @@ const processImage = async () => {
         canvas.height = state.originalImage.height;
         ctx.drawImage(state.originalImage, 0, 0);
         
-        const fullImageData = ctx.getImageData(0, 0, state.originalImage.width, state.originalImage.height);
+        let fullImageData = ctx.getImageData(0, 0, state.originalImage.width, state.originalImage.height);
+        
+        // 应用线条增强
+        if (state.lineEnhance) {
+            progressFill.style.width = '10%';
+            progressText.textContent = '应用线条增强...';
+            fullImageData = applyLineEnhancement(fullImageData, state.lineStrength);
+        }
         
         // Step 1: Initial Mapping
         progressFill.style.width = '25%';
         progressText.textContent = '步骤1: 初始颜色映射...';
-        state.initialMappedData = performInitialMapping(
-            fullImageData.data, width, height, 
-            state.originalImage.width, state.originalImage.height
-        );
+        
+        try {
+            state.initialMappedData = performInitialMapping(
+                fullImageData.data, width, height, 
+                state.originalImage.width, state.originalImage.height
+            );
+            
+            // 验证初始映射结果
+            if (!state.initialMappedData || state.initialMappedData.length === 0) {
+                throw new Error('初始颜色映射失败');
+            }
+        } catch (error) {
+            console.error('初始颜色映射出错:', error);
+            throw new Error(`初始颜色映射失败: ${error.message}`);
+        }
         
         // Step 2: Region Merging
         progressFill.style.width = '50%';
         progressText.textContent = '步骤2: 区域颜色合并...';
-        state.mergedData = performRegionMerging(state.initialMappedData);
+        
+        try {
+            state.mergedData = performRegionMerging(state.initialMappedData);
+            
+            // 验证区域合并结果
+            if (!state.mergedData || state.mergedData.length === 0) {
+                throw new Error('区域颜色合并失败');
+            }
+        } catch (error) {
+            console.error('区域颜色合并出错:', error);
+            throw new Error(`区域颜色合并失败: ${error.message}`);
+        }
         
         // Step 3: Background Removal
         progressFill.style.width = '75%';
         progressText.textContent = '步骤3: 背景移除...';
-        state.externalBackground = performBackgroundRemoval(state.mergedData);
+        
+        try {
+            state.externalBackground = performBackgroundRemoval(state.mergedData);
+            
+            // 验证背景移除结果
+            if (!state.externalBackground || state.externalBackground.length === 0) {
+                throw new Error('背景移除失败');
+            }
+        } catch (error) {
+            console.error('背景移除出错:', error);
+            throw new Error(`背景移除失败: ${error.message}`);
+        }
         
         // Step 4: Color Exclusion
         progressFill.style.width = '90%';
         progressText.textContent = '步骤4: 颜色排除处理...';
-        state.colorData = performColorExclusion(state.mergedData, state.excludedColors);
+        
+        try {
+            state.colorData = performColorExclusion(state.mergedData, state.excludedColors);
+            
+            // 验证颜色排除结果
+            if (!state.colorData || state.colorData.length === 0) {
+                throw new Error('颜色排除处理失败');
+            }
+        } catch (error) {
+            console.error('颜色排除处理出错:', error);
+            throw new Error(`颜色排除处理失败: ${error.message}`);
+        }
         
         // Update color counts
         state.colorCounts = {};
@@ -1557,11 +2069,12 @@ const processImage = async () => {
         renderShoppingList();
         
     } catch (error) {
-        console.error('Processing error:', error);
-        progressText.textContent = '处理失败，请重试';
+        console.error('处理图片时出错:', error);
+        progressText.textContent = `处理失败: ${error.message}`;
+        
         setTimeout(() => {
             progressContainer.style.display = 'none';
-        }, 2000);
+        }, 3000);
     }
 };
 
@@ -1587,8 +2100,8 @@ const renderCanvas = () => {
     let minY = state.colorData.length;
     let maxY = 0;
     
-    for(let y=0; y<state.colorData.length; y++) {
-        for(let x=0; x<state.colorData[y].length; x++) {
+    for(let y = 0; y < state.colorData.length; y++) {
+        for(let x = 0; x < state.colorData[y].length; x++) {
             const key = state.colorData[y][x];
             if (!key) continue;
             
@@ -1648,7 +2161,7 @@ const renderCanvas = () => {
         }
     }
 
-    // Draw grid and beads - 修复居中和偏移问题
+    // Draw grid and beads
     const offsetX = state.showCoords ? padding/2 : 15;
     const offsetY = state.showCoords ? padding/2 : 15;
     
@@ -1662,7 +2175,6 @@ const renderCanvas = () => {
             
             // Skip if this color is hidden
             if (state.hiddenColors.has(key)) {
-                // Draw empty cell for hidden colors
                 ctx.fillStyle = '#f8f8f8';
                 ctx.fillRect(px, py, cellSize, cellSize);
                 ctx.strokeStyle = '#e0e0e0';
@@ -1678,10 +2190,9 @@ const renderCanvas = () => {
             
             // Draw bead
             if (state.externalBackground[y] && state.externalBackground[y][x]) {
-                // Draw background in light gray
                 ctx.fillStyle = '#f0f0f0';
             } else {
-                ctx.fillStyle = MARD_COLORS_FULL[key];
+                ctx.fillStyle = BRAND_COLORS[state.currentBrand][key];
             }
             ctx.fillRect(px, py, cellSize, cellSize);
             
@@ -1704,7 +2215,7 @@ const renderCanvas = () => {
             
             // Draw color code
             if (state.showColors && !(state.externalBackground[y] && state.externalBackground[y][x])) {
-                const rgb = hexToRgb(MARD_COLORS_FULL[key]);
+                const rgb = hexToRgb(BRAND_COLORS[state.currentBrand][key]);
                 const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
                 ctx.fillStyle = brightness > 140 ? '#000' : '#fff';
                 
@@ -1734,7 +2245,7 @@ const renderShoppingList = () => {
         item.className = 'list-item';
         item.style.cursor = 'pointer';
         item.innerHTML = `
-            <div class="list-swatch" style="background:${MARD_COLORS_FULL[key]}"></div>
+            <div class="list-swatch" style="background:${BRAND_COLORS[state.currentBrand][key]}"></div>
             <span><strong>${key}</strong></span>
             <span style="margin-left:auto; font-weight:600;">×${count}</span>
         `;
@@ -1758,8 +2269,8 @@ const showCoordinateInfo = (colorKey, x, y) => {
         state.selectedCell = null;
     }
     document.getElementById('coord-color').textContent = colorKey;
-    document.getElementById('coord-hex').textContent = MARD_COLORS_FULL[colorKey];
-    document.getElementById('coord-preview').style.backgroundColor = MARD_COLORS_FULL[colorKey];
+    document.getElementById('coord-hex').textContent = BRAND_COLORS[state.currentBrand][colorKey];
+    document.getElementById('coord-preview').style.backgroundColor = BRAND_COLORS[state.currentBrand][colorKey];
     display.style.display = 'block';
     
     setTimeout(() => {
@@ -1779,7 +2290,7 @@ const attachCanvasListeners = (canvas, cellSize, offsetX, offsetY, minX, minY) =
                     坐标: ${toAlphaCoord(x, y)}<br>
                     位置: (${x+1}, ${y+1})<br>
                     色号: <strong>${key}</strong><br>
-                    颜色: <span style="display:inline-block;width:14px;height:14px;background:${MARD_COLORS_FULL[key]};border:1px solid #333;vertical-align:middle;"></span>
+                    颜色: <span style="display:inline-block;width:14px;height:14px;background:${BRAND_COLORS[state.currentBrand][key]};border:1px solid #333;vertical-align:middle;"></span>
                 `;
                 tooltip.style.left = e.pageX + 12 + 'px'; 
                 tooltip.style.top = e.pageY - 35 + 'px'; 
@@ -1810,7 +2321,7 @@ const showColorPicker = () => {
     colorPickerGrid.innerHTML = '';
     
     // Sort colors by name for better organization
-    const sortedColors = Object.entries(MARD_COLORS_FULL);
+    const sortedColors = Object.entries(BRAND_COLORS[state.currentBrand]);
     
     sortedColors.forEach(([key, color]) => {
         const item = document.createElement('div');
@@ -1869,23 +2380,65 @@ const updateStatus = () => {
 };
 
 const initializeUI = () => {
-    Object.keys(COLOR_PRESETS).forEach(name => {
+    // Brand buttons
+    Object.keys(BRAND_COLORS).forEach(brand => {
         const btn = document.createElement('button'); 
-        btn.className = 'preset-btn'; 
-        btn.textContent = name;
+        btn.className = 'brand-btn'; 
+        btn.textContent = brand;
         btn.onclick = () => { 
-            state.activePalette = COLOR_PRESETS[name]; 
-            document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active')); 
-            btn.classList.add('active'); 
+            state.currentBrand = brand;
+            state.activePalette = ALL_COLOR_KEYS[brand]; // 默认使用全色系
+            document.querySelectorAll('.brand-btn').forEach(b=>b.classList.remove('active')); 
+            btn.classList.add('active');
+            
+            // 更新预设按钮区域
+            updatePresetButtons();
+            
             // Auto process if image is loaded
             if (state.originalImage) {
                 processImage();
             }
         };
-        if (name === '全色系291色') btn.classList.add('active');
-        presetButtons.appendChild(btn);
+        if (brand === 'MARD') btn.classList.add('active');
+        brandButtons.appendChild(btn);
     });
+    
+    // 初始化预设按钮
+    updatePresetButtons();
+};
 
+const updatePresetButtons = () => {
+    const presetButtons = document.getElementById('preset-buttons');
+    presetButtons.innerHTML = '';
+    
+    if (state.currentBrand === 'MARD') {
+        // 显示MARD预设
+        Object.keys(MARD_COLOR_PRESETS).forEach(name => {
+            const btn = document.createElement('button'); 
+            btn.className = 'preset-btn'; 
+            btn.textContent = name;
+            btn.onclick = () => { 
+                state.activePalette = MARD_COLOR_PRESETS[name]; 
+                document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active')); 
+                btn.classList.add('active'); 
+                // Auto process if image is loaded
+                if (state.originalImage) {
+                    processImage();
+                }
+            };
+            if (name === '全色系291色') btn.classList.add('active');
+            presetButtons.appendChild(btn);
+        });
+    } else {
+        // 其他品牌只显示全色系
+        const btn = document.createElement('button'); 
+        btn.className = 'preset-btn'; 
+        btn.textContent = '全色系';
+        btn.classList.add('active');
+        presetButtons.appendChild(btn);
+    }
+    
+    // 添加自定义按钮
     const customBtn = document.createElement('button'); 
     customBtn.className = 'preset-btn'; 
     customBtn.textContent = '自定义';
@@ -1897,11 +2450,12 @@ const initializeUI = () => {
 };
 
 const renderCustomColorGrid = () => {
+    const customColorGrid = document.getElementById('custom-color-grid');
     customColorGrid.innerHTML = '';
-    ALL_COLOR_KEYS.forEach(key => {
+    ALL_COLOR_KEYS[state.currentBrand].forEach(key => {
         const swatch = document.createElement('div'); 
         swatch.className = 'color-swatch';
-        swatch.style.backgroundColor = MARD_COLORS_FULL[key];
+        swatch.style.backgroundColor = BRAND_COLORS[state.currentBrand][key];
         swatch.dataset.key = key;
         
         // Add tooltip
@@ -1920,12 +2474,13 @@ const renderCustomColorGrid = () => {
 };
 
 const updateExcludedColorsDisplay = () => {
+    const excludedColorsDiv = document.getElementById('excluded-colors');
     excludedColorsDiv.innerHTML = '';
     state.excludedColors.forEach(colorKey => {
         const item = document.createElement('div');
         item.className = 'excluded-color-item';
         item.innerHTML = `
-            <div class="excluded-color-swatch" style="background:${MARD_COLORS_FULL[colorKey]}"></div>
+            <div class="excluded-color-swatch" style="background:${BRAND_COLORS[state.currentBrand][colorKey]}"></div>
             <span>${colorKey}</span>
             <span class="remove-exclusion" data-color="${colorKey}">✕</span>
         `;
@@ -1962,12 +2517,23 @@ fileInput.onchange = (e) => {
 };
 
 const handleFile = (file) => {
+    if (!file) return;
+    
+    console.log('处理文件:', file.name, file.type, file.size);
+    
+    // 验证文件类型
+    if (!file.type.match(/image\/(jpeg|jpg|png|gif)/i)) {
+        alert('请选择有效的图片文件 (JPG, PNG, GIF)');
+        return;
+    }
+    
     const reader = new FileReader();
     reader.onload = (e) => {
+        console.log('文件读取完成');
         const img = new Image();
         img.onload = () => { 
-            state.originalImage = img;
             console.log('图片加载成功，尺寸:', img.width, 'x', img.height);
+            state.originalImage = img;
             
             // Auto update dimensions based on aspect ratio
             if (img.width && img.height) {
@@ -1979,7 +2545,15 @@ const handleFile = (file) => {
             // Auto process image
             processImage();
         };
+        img.onerror = () => {
+            console.error('图片加载失败');
+            alert('图片加载失败，请重试');
+        };
         img.src = e.target.result;
+    };
+    reader.onerror = () => {
+        console.error('文件读取失败');
+        alert('文件读取失败，请重试');
     };
     reader.readAsDataURL(file);
 };
@@ -2050,7 +2624,7 @@ showBackgroundCheckbox.onchange = (e) => {
     renderCanvas();
 };
 
-// Color manipulation buttons - 修复高亮和隐藏功能
+// Color manipulation buttons
 highlightBtn.onclick = () => {
     if (state.selectedColor) {
         if (state.highlightedColor === state.selectedColor) {
@@ -2110,178 +2684,242 @@ colorPickerModal.onclick = (e) => {
     }
 };
 
-// Download functions
-downloadBtn.onclick = () => {
-    const canvas = document.createElement('canvas'); 
-    const ctx = canvas.getContext('2d');
-    const hdCellSize = 50;
-    const coordSize = state.showCoords ? 200 : 40;
-    const padding = state.showCoords ? 300 : 80;
-    
-    // Calculate actual content boundaries
-    let minX = state.colorData[0].length;
-    let maxX = 0;
-    let minY = state.colorData.length;
-    let maxY = 0;
-    
-    for(let y=0; y<state.colorData.length; y++) {
-        for(let x=0; x<state.colorData[y].length; x++) {
-            const key = state.colorData[y][x];
-            if (!key) continue;
-            
-            // Only non-background colors count for boundaries
-            if (!(state.externalBackground[y] && state.externalBackground[y][x])) {
-                minX = Math.min(minX, x);
-                maxX = Math.max(maxX, x);
-                minY = Math.min(minY, y);
-                maxY = Math.max(maxY, y);
-            }
-        }
+// Save custom palette button
+document.getElementById('save-custom-palette').onclick = () => {
+    if (state.customPalette.size === 0) {
+        alert('请先选择自定义颜色');
+        return;
     }
     
-    // Expand boundaries to ensure edges are visible
-    minX = Math.max(0, minX - 1);
-    minY = Math.max(0, minY - 1);
-    maxX = Math.min(state.colorData[0].length - 1, maxX + 1);
-    maxY = Math.min(state.colorData.length - 1, maxY + 1);
+    state.activePalette = Array.from(state.customPalette);
+    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
     
-    const actualWidth = maxX - minX + 1;
-    const actualHeight = maxY - minY + 1;
+    // Auto process if image is loaded
+    if (state.originalImage) {
+        processImage();
+    }
     
-    canvas.width = actualWidth * hdCellSize + padding;
-    canvas.height = actualHeight * hdCellSize + padding + 350;
+    alert('自定义色板已保存！');
+};
+
+// 修复下载功能 - 使用完整版手机文件的下载代码
+const downloadPattern = () => {
+    if (!state.colorData || state.colorData.length === 0) {
+        alert('请先生成图纸');
+        return;
+    }
     
-    ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    console.log('开始下载图纸...');
     
-    // Draw coordinate labels
-    if (state.showCoords) {
-        ctx.font = 'bold 32px Arial'; 
-        ctx.textAlign = 'center'; 
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#333';
+    try {
+        // 创建高分辨率画布
+        const canvas = document.createElement('canvas'); 
+        const ctx = canvas.getContext('2d');
+        const hdCellSize = 50; // 高清图纸的单元格大小
         
-        for(let x = minX; x <= maxX; x++) {
-            const label = (x + 1).toString();
-            const xPos = (x - minX) * hdCellSize + hdCellSize/2 + padding/2;
-            ctx.fillText(label, xPos, padding/2 - 40);
+        // 计算实际内容边界
+        let minX = state.colorData[0].length;
+        let maxX = 0;
+        let minY = state.colorData.length;
+        let maxY = 0;
+        
+        for(let y = 0; y < state.colorData.length; y++) {
+            for(let x = 0; x < state.colorData[y].length; x++) {
+                const key = state.colorData[y][x];
+                if (!key) continue;
+                
+                // 只有非背景颜色计入边界
+                if (!(state.externalBackground[y] && state.externalBackground[y][x])) {
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                }
+            }
         }
+        
+        // 扩展边界以确保边缘可见
+        minX = Math.max(0, minX - 1);
+        minY = Math.max(0, minY - 1);
+        maxX = Math.min(state.colorData[0].length - 1, maxX + 1);
+        maxY = Math.min(state.colorData.length - 1, maxY + 1);
+        
+        const actualWidth = maxX - minX + 1;
+        const actualHeight = maxY - minY + 1;
+        
+        const coordSize = state.showCoords ? 200 : 40;
+        const padding = state.showCoords ? 300 : 80;
+        
+        // 计算材料表所需空间
+        const sorted = Object.entries(state.colorCounts).sort((a,b)=>b[1]-a[1]);
+        const itemsPerRow = Math.floor(1080 / 150); // 适配手机屏幕宽度
+        const rowsNeeded = Math.ceil(sorted.length / itemsPerRow);
+        const listHeight = rowsNeeded * 110 + 100; // 每行高度110px，加上标题间距
+        
+        // 重新计算画布高度 - 确保包含完整材料表
+        canvas.width = Math.max(1080, actualWidth * hdCellSize + padding); // 最小宽度1080px适配手机
+        canvas.height = actualHeight * hdCellSize + padding + listHeight + 200; // 增加额外空间确保材料表完整显示
+        
+        console.log(`修复后画布尺寸: ${canvas.width} x ${canvas.height}`);
+        
+        // 设置背景
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制坐标标签
+        if (state.showCoords) {
+            ctx.font = 'bold 32px Arial'; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#333';
+            
+            for(let x = minX; x <= maxX; x++) {
+                const label = (x + 1).toString();
+                const xPos = (x - minX) * hdCellSize + hdCellSize/2 + padding/2;
+                ctx.fillText(label, xPos, padding/2 - 40);
+            }
+            
+            for(let y = minY; y <= maxY; y++) {
+                const label = (y + 1).toString();
+                const yPos = (y - minY) * hdCellSize + hdCellSize/2 + padding/2;
+                ctx.fillText(label, padding/2 - 40, yPos);
+            }
+        }
+
+        // 绘制图案
+        const offsetX = state.showCoords ? padding/2 : 40;
+        const offsetY = state.showCoords ? padding/2 : 40;
         
         for(let y = minY; y <= maxY; y++) {
-            const label = (y + 1).toString();
-            const yPos = (y - minY) * hdCellSize + hdCellSize/2 + padding/2;
-            ctx.fillText(label, padding/2 - 40, yPos);
-        }
-    }
-
-    // Draw pattern
-    const offsetX = state.showCoords ? padding/2 : 40;
-    const offsetY = state.showCoords ? padding/2 : 40;
-    
-    for(let y = minY; y <= maxY; y++) {
-        for(let x = minX; x <= maxX; x++) {
-            const key = state.colorData[y][x];
-            if (!key) continue;
-            
-            const px = (x - minX) * hdCellSize + offsetX;
-            const py = (y - minY) * hdCellSize + offsetY;
-            
-            if (state.externalBackground[y] && state.externalBackground[y][x] && !state.showBackground) continue;
-            
-            // Skip hidden colors in download
-            if (state.hiddenColors.has(key)) {
-                ctx.fillStyle = '#f8f8f8';
-                ctx.fillRect(px, py, hdCellSize, hdCellSize);
-                ctx.strokeStyle = '#e0e0e0';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(px, py, hdCellSize, hdCellSize);
-                continue;
-            }
-            
-            if (state.externalBackground[y] && state.externalBackground[y][x]) {
-                ctx.fillStyle = '#f0f0f0';
-            } else {
-                ctx.fillStyle = MARD_COLORS_FULL[key];
-            }
-            ctx.fillRect(px, py, hdCellSize, hdCellSize);
-            
-            if (state.showGrid) {
-                ctx.strokeStyle = '#ddd';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(px, py, hdCellSize, hdCellSize);
-            }
-            
-            if (state.showColors && !(state.externalBackground[y] && state.externalBackground[y][x]) && !state.hiddenColors.has(key)) {
-                const rgb = hexToRgb(MARD_COLORS_FULL[key]);
-                const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
-                ctx.fillStyle = brightness > 140 ? '#000' : '#fff';
-                ctx.font = 'bold 20px Arial';
-                ctx.textAlign = 'center'; 
-                ctx.textBaseline = 'middle';
+            for(let x = minX; x <= maxX; x++) {
+                const key = state.colorData[y][x];
+                if (!key) continue;
                 
-                const text = key;
-                ctx.fillText(text, px + hdCellSize/2, py + hdCellSize/2);
+                const px = (x - minX) * hdCellSize + offsetX;
+                const py = (y - minY) * hdCellSize + offsetY;
+                
+                // 跳过隐藏的颜色
+                if (state.hiddenColors.has(key)) {
+                    ctx.fillStyle = '#f8f8f8';
+                    ctx.fillRect(px, py, hdCellSize, hdCellSize);
+                    ctx.strokeStyle = '#e0e0e0';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(px, py, hdCellSize, hdCellSize);
+                    continue;
+                }
+                
+                // 跳过外部背景（如果不显示背景）
+                if (!state.showBackground && state.externalBackground[y] && state.externalBackground[y][x]) continue;
+                
+                // 绘制珠子
+                if (state.externalBackground[y] && state.externalBackground[y][x]) {
+                    ctx.fillStyle = '#f0f0f0';
+                } else {
+                    const color = BRAND_COLORS[state.currentBrand][key];
+                    if (!color) {
+                        console.warn(`颜色 ${key} 在品牌 ${state.currentBrand} 中不存在，使用默认颜色`);
+                        ctx.fillStyle = '#ccc';
+                    } else {
+                        ctx.fillStyle = color;
+                    }
+                }
+                ctx.fillRect(px, py, hdCellSize, hdCellSize);
+                
+                // 绘制网格
+                if (state.showGrid) {
+                    ctx.strokeStyle = '#ddd';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px, py, hdCellSize, hdCellSize);
+                }
+                
+                // 高亮相同颜色
+                if (state.highlightedColor === key) {
+                    ctx.fillStyle = 'rgba(255, 200, 0, 0.4)';
+                    ctx.fillRect(px, py, hdCellSize, hdCellSize);
+                    ctx.strokeStyle = '#ff9500';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(px, py, hdCellSize, hdCellSize);
+                    ctx.lineWidth = 1;
+                }
+                
+                // 绘制色号
+                if (state.showColors && !(state.externalBackground[y] && state.externalBackground[y][x]) && !state.hiddenColors.has(key)) {
+                    const rgb = hexToRgb(BRAND_COLORS[state.currentBrand][key]);
+                    const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                    ctx.fillStyle = brightness > 140 ? '#000' : '#fff';
+                    
+                    const fontSize = Math.min(hdCellSize * 0.4, 18);
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center'; 
+                    ctx.textBaseline = 'middle';
+                    
+                    const text = key;
+                    ctx.fillText(text, px + hdCellSize/2, py + hdCellSize/2);
+                }
             }
         }
-    }
-    
-    // Draw material list
-    const listY = actualHeight * hdCellSize + offsetY + 50;
-    ctx.font = 'bold 24px Arial';
-    ctx.fillStyle = '#333';
-    ctx.textAlign = 'left';
-    ctx.fillText('📦 材料清单:', 50, listY);
-    
-    const sorted = Object.entries(state.colorCounts).sort((a,b)=>b[1]-a[1]);
-    let xOffset = 50;
-    let yOffset = listY + 50;
-    const itemWidth = 140;
-    const itemHeight = 90;
-    const itemsPerRow = Math.floor((canvas.width - 100) / (itemWidth + 20));
-    
-    sorted.forEach(([key, count], index) => {
-        const col = index % itemsPerRow;
-        const row = Math.floor(index / itemsPerRow);
-        const itemX = 50 + col * (itemWidth + 20);
-        const itemY = yOffset + row * (itemHeight + 20);
         
-        ctx.fillStyle = MARD_COLORS_FULL[key];
-        ctx.fillRect(itemX, itemY, 45, 45);
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(itemX, itemY, 45, 45);
-        
+        // 绘制材料清单 - 修复布局问题
+        const listY = actualHeight * hdCellSize + offsetY + 50;
+        ctx.font = 'bold 24px Arial';
         ctx.fillStyle = '#333';
-        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(key, itemX + 55, itemY + 20);
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(`×${count}`, itemX + 55, itemY + 45);
+        ctx.fillText('📦 材料清单:', 50, listY);
         
-        const neededHeight = itemY + itemHeight + 50;
-        if (neededHeight > canvas.height) {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = neededHeight;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(canvas, 0, 0);
-            canvas.width = tempCanvas.width;
-            canvas.height = tempCanvas.height;
-            ctx.drawImage(tempCanvas, 0, 0);
-        }
-    });
-    
-    ctx.font = '14px Arial';
-    ctx.fillStyle = '#666';
-    ctx.textAlign = 'center';
-    ctx.fillText('拼豆图纸生成器-西瓜制作', canvas.width/2, canvas.height - 60);
-    ctx.fillText('版权已登记，仅授权于淘宝店铺：大师精品资料', canvas.width/2, canvas.height - 35);
-    
-    const link = document.createElement('a'); 
-    link.download = `mard-pattern-${Date.now()}.png`; 
-    link.href = canvas.toDataURL('image/png', 1.0); 
-    link.click();
+        // 重新计算材料表布局 - 确保在手机上完整显示
+        const itemWidth = 140;
+        const itemHeight = 90;
+        const itemsPerRowFixed = Math.floor((canvas.width - 100) / (itemWidth + 20));
+        
+        sorted.forEach(([key, count], index) => {
+            const col = index % itemsPerRowFixed;
+            const row = Math.floor(index / itemsPerRowFixed);
+            const itemX = 50 + col * (itemWidth + 20);
+            const itemY = listY + 50 + row * (itemHeight + 20);
+            
+            // 确保不会超出画布底部
+            if (itemY + itemHeight > canvas.height - 50) {
+                console.warn(`材料表项目 ${key} 超出画布边界`);
+                return;
+            }
+            
+            const color = BRAND_COLORS[state.currentBrand][key];
+            if (color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(itemX, itemY, 45, 45);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(itemX, itemY, 45, 45);
+            }
+            
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(key, itemX + 55, itemY + 20);
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(`×${count}`, itemX + 55, itemY + 45);
+        });
+        
+        // 绘制版权信息
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.fillText('拼豆图纸生成器-西瓜制作', canvas.width/2, canvas.height - 60);
+        ctx.fillText('版权已登记，仅授权于淘宝店铺：大师精品资料', canvas.width/2, canvas.height - 35);
+        
+        // 下载画布
+        const link = document.createElement('a'); 
+        link.download = `拼豆图纸_${state.currentBrand}_${new Date().getTime()}.png`; 
+        link.href = canvas.toDataURL('image/png', 1.0); 
+        link.click();
+        
+        console.log('图纸下载完成');
+        
+    } catch (error) {
+        console.error('下载失败:', error);
+        alert('下载失败，请重试');
+    }
 };
 
 // Download statistics image
@@ -2304,7 +2942,7 @@ downloadStatsBtn.onclick = () => {
     ctx.font = 'bold 24px Arial';
     ctx.fillStyle = '#333';
     ctx.textAlign = 'center';
-    ctx.fillText('📊 材料统计图', canvas.width/2, 40);
+    ctx.fillText('📊 材料统计图', canvas.width/2, canvas.height - 20);
     
     sorted.forEach(([key, count], index) => {
         const col = index % itemsPerRow;
@@ -2312,7 +2950,7 @@ downloadStatsBtn.onclick = () => {
         const itemX = 50 + col * itemWidth;
         const itemY = 80 + row * itemHeight;
         
-        ctx.fillStyle = MARD_COLORS_FULL[key];
+        ctx.fillStyle = BRAND_COLORS[state.currentBrand][key];
         ctx.fillRect(itemX, itemY, 40, 40);
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 2;
@@ -2332,9 +2970,30 @@ downloadStatsBtn.onclick = () => {
     ctx.fillText('拼豆图纸生成器-西瓜制作', canvas.width/2, canvas.height - 20);
     
     const link = document.createElement('a'); 
-    link.download = `mard-stats-${Date.now()}.png`; 
+    link.download = `拼豆材料统计_${state.currentBrand}_${Date.now()}.png`; 
     link.href = canvas.toDataURL('image/png', 1.0); 
     link.click();
+};
+
+// Line enhancement controls
+useLineEnhance.onchange = function() {
+    state.lineEnhance = this.checked;
+    lineStrengthSection.style.display = this.checked ? 'block' : 'none';
+    
+    // 如果有图片，重新处理
+    if (state.originalImage) {
+        processImage();
+    }
+};
+
+lineStrength.oninput = function() {
+    state.lineStrength = parseInt(this.value);
+    lineStrengthValue.textContent = this.value;
+    
+    // 实时预览效果
+    if (state.originalImage && state.lineEnhance) {
+        processImage();
+    }
 };
 
 // --- Responsiveness ---
@@ -2363,8 +3022,11 @@ document.addEventListener('keydown', (e) => {
 // --- Init ---
 document.addEventListener('DOMContentLoaded', function() {
     initializeUI();
+    // 修复：绑定下载按钮事件
+    downloadBtn.onclick = downloadPattern;
 });
 </script>
 
 </body>
 </html>
+```
