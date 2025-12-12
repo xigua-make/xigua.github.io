@@ -467,7 +467,7 @@
         .color-picker-modal {
             position: fixed;
             top: 0;
-            left: 0,
+            left: 0;
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
@@ -480,8 +480,7 @@
             background: white;
             border-radius: var(--radius);
             padding: 2rem;
-            max-width: 600px;
-            width: 90%;
+            width: 700px; /* 固定宽度以容纳9列 */
             max-height: 80vh;
             overflow-y: auto;
         }
@@ -510,8 +509,10 @@
         }
         .color-picker-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(9, 1fr); /* 9列布局 */
+            grid-template-rows: repeat(7, auto); /* 7行布局 */
+            gap: 10px; /* 减小间距以适应更多列 */
+            justify-items: center; /* 居中对齐每个颜色项 */
         }
         .color-picker-item {
             width: 60px;
@@ -700,12 +701,12 @@
                 margin: 10px 0;
             }
             .color-picker-content {
-                max-width: 95%;
+                width: 95%;
                 padding: 1.5rem;
             }
             .color-picker-grid {
-                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-                gap: 8px;
+                grid-template-columns: repeat(5, 1fr); /* 平板5列 */
+                grid-template-rows: repeat(7, auto);
             }
             .color-picker-item {
                 width: 50px;
@@ -771,8 +772,8 @@
                 font-size: 0.9rem;
             }
             .color-picker-grid {
-                grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
-                gap: 6px;
+                grid-template-columns: repeat(4, 1fr); /* 手机4列 */
+                grid-template-rows: repeat(7, auto);
             }
             .color-picker-item {
                 width: 45px;
@@ -811,7 +812,8 @@
                 padding: 10px;
             }
             .color-picker-grid {
-                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+                grid-template-columns: repeat(3, 1fr); /* 小手机3列 */
+                grid-template-rows: repeat(7, auto);
             }
             .color-picker-item {
                 width: 40px;
@@ -3029,4 +3031,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
 ```
+
