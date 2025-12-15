@@ -75,36 +75,111 @@
         
         /* --- Layout --- */
         .app-container { display: grid; grid-template-columns: var(--sidebar-width) 1fr; height: 100vh; display: none; }
-        .sidebar { 
+        .sidebar {
             background: var(--bg-secondary); 
             border-right: 1px solid var(--border-color); 
-            padding: 2rem; 
+            padding: 1.5rem;
             overflow-y: auto; 
             display: flex; 
             flex-direction: column;
             box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            width: 320px;
         }
-        .main-content { display: flex; flex-direction: column; overflow: hidden; }
-        .header { 
-            padding: 1.2rem 2rem; 
-            background: var(--bg-secondary); 
-            border-bottom: 1px solid var(--border-color); 
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem; 
+            min-height: 70px; 
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+        .header h1 {
+            font-size: 1.6rem; 
             display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            flex-wrap: wrap;
-            gap: 1rem;
+            flex-direction: column; 
+            align-items: flex-start;
         }
-        .workspace { 
+        .header .subtitle {
+            font-size: 0.8rem; 
+            color: var(--text-secondary);
+            font-weight: normal; 
+            margin-top: 6px;
+            max-width: 400px; 
+            line-height: 1.3;
+            opacity: 0.8;
+        }
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .workspace {
             flex-grow: 1; 
-            padding: 2rem; 
-            overflow: auto; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            padding: 0; 
+            overflow: hidden; 
+            display: block; 
             position: relative;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 0;
+        }
+        .canvas-viewport {
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            padding: 20px; 
+            position: relative;
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #ccc #f1f1f1; /* Firefox */
+        }
+        /* WebKit滚动条样式 */
+        .canvas-viewport::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        .canvas-viewport::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 6px;
+        }
+        .canvas-viewport::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 6px;
+            border: 2px solid #f1f1f1;
+        }
+        .canvas-viewport::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+        .canvas-container {
+            position: relative; 
+            box-shadow: var(--shadow-lg); 
+            border-radius: var(--radius); 
+            background: #fff;
+            padding: 20px;
+            display: inline-block;
+            min-width: 200px;
+            min-height: 200px;
+            margin: 0 auto;
+            transform-origin: center center;
+            transition: transform 0.2s ease;
+        }
+        #pattern-canvas {
+            display: block; 
+            border-radius: var(--radius); 
+            cursor: crosshair; 
+            image-rendering: pixelated; 
+            image-rendering: -moz-crisp-edges; 
+            image-rendering: crisp-edges;
+            max-width: none;
+            max-height: none;
+            background-color: white;
         }
         
         /* --- Components --- */
@@ -262,35 +337,6 @@
             color: var(--text-secondary);
             margin-top: 0.5rem;
         }
-        .excluded-colors {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        .excluded-color-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 0.6rem;
-            background: var(--bg-primary);
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-        .excluded-color-swatch {
-            width: 16px;
-            height: 16px;
-            border-radius: 2px;
-            border: 1px solid var(--border-color);
-        }
-        .remove-exclusion {
-            cursor: pointer;
-            color: var(--text-secondary);
-            font-weight: bold;
-        }
-        .remove-exclusion:hover {
-            color: var(--primary-color);
-        }
         
         .slider-group { margin-top: 1.2rem; }
         .slider-group label { display: block; font-size: 0.95rem; margin-bottom: 0.6rem; color: var(--text-secondary); }
@@ -391,25 +437,6 @@
         }
         
         /* --- Canvas & Preview --- */
-        .canvas-container { 
-            position: relative; 
-            box-shadow: var(--shadow-lg); 
-            border-radius: var(--radius); 
-            background: #fff;
-            padding: 25px;
-            display: inline-block;
-            margin: 20px 0;
-            max-width: 100%;
-            overflow: auto;
-        }
-        #pattern-canvas { 
-            display: block; 
-            border-radius: var(--radius); 
-            cursor: crosshair; 
-            image-rendering: pixelated; 
-            image-rendering: -moz-crisp-edges; 
-            image-rendering: crisp-edges;
-        }
         .tooltip {
             position: absolute; 
             background: rgba(0, 0, 0, 0.95); 
@@ -442,13 +469,14 @@
             left: 50%; 
             transform: translate(-50%, -50%);
             background: rgba(255, 255, 255, 0.98); 
-            padding: 20px 24px; 
+            padding: 16px 20px; 
             border-radius: 12px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.15); 
             z-index: 1002; 
             display: none;
             border: 2px solid var(--primary-color);
             backdrop-filter: blur(10px);
+            margin-top: 60px; 
         }
         .coordinate-display h4 { margin-bottom: 12px; color: var(--primary-color); font-size: 1.1rem; }
         .coordinate-display p { margin: 6px 0; font-size: 0.95rem; }
@@ -480,9 +508,10 @@
             background: white;
             border-radius: var(--radius);
             padding: 2rem;
-            width: 700px; /* 固定宽度以容纳9列 */
+            width: 700px;
             max-height: 80vh;
             overflow-y: auto;
+            position: relative;
         }
         .color-picker-header {
             display: flex;
@@ -509,10 +538,10 @@
         }
         .color-picker-grid {
             display: grid;
-            grid-template-columns: repeat(9, 1fr); /* 9列布局 */
-            grid-template-rows: repeat(7, auto); /* 7行布局 */
-            gap: 10px; /* 减小间距以适应更多列 */
-            justify-items: center; /* 居中对齐每个颜色项 */
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(7, auto);
+            gap: 10px;
+            justify-items: center;
         }
         .color-picker-item {
             width: 60px;
@@ -705,7 +734,7 @@
                 padding: 1.5rem;
             }
             .color-picker-grid {
-                grid-template-columns: repeat(5, 1fr); /* 平板5列 */
+                grid-template-columns: repeat(5, 1fr);
                 grid-template-rows: repeat(7, auto);
             }
             .color-picker-item {
@@ -742,10 +771,10 @@
                 display: none;
             }
             .header {
-                padding: 1rem;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
+                padding: 1rem 2rem; 
+                min-height: 60px; 
+                position: relative;
+                z-index: 100;
             }
             .header h1 {
                 font-size: 1.1rem;
@@ -772,7 +801,7 @@
                 font-size: 0.9rem;
             }
             .color-picker-grid {
-                grid-template-columns: repeat(4, 1fr); /* 手机4列 */
+                grid-template-columns: repeat(4, 1fr);
                 grid-template-rows: repeat(7, auto);
             }
             .color-picker-item {
@@ -812,7 +841,7 @@
                 padding: 10px;
             }
             .color-picker-grid {
-                grid-template-columns: repeat(3, 1fr); /* 小手机3列 */
+                grid-template-columns: repeat(3, 1fr);
                 grid-template-rows: repeat(7, auto);
             }
             .color-picker-item {
@@ -947,12 +976,7 @@
         </div>
 
         <div class="control-section">
-            <h3 class="control-title">🚫 5. 颜色排除</h3>
-            <div id="excluded-colors" class="excluded-colors"></div>
-        </div>
-
-        <div class="control-section">
-            <h3 class="control-title">⚙️ 6. 操作 & 下载</h3>
+            <h3 class="control-title">⚙️ 5. 操作 & 下载</h3>
             <div class="zoom-controls">
                 <span>缩放:</span>
                 <button class="btn-zoom" id="zoom-out">－</button>
@@ -1003,10 +1027,6 @@
                     <input type="checkbox" id="show-colors" checked>
                     <span>显示色号</span>
                 </label>
-                <label>
-                    <input type="checkbox" id="show-background" checked>
-                    <span>显示背景</span>
-                </label>
             </div>
             <div class="button-group">
                 <button class="btn-icon" id="highlight-btn" title="高亮相同颜色">🔆</button>
@@ -1015,7 +1035,7 @@
             </div>
         </header>
         <div class="workspace" id="workspace">
-             <p style="color: var(--text-secondary); font-size: 1.1rem;">请上传图片以开始创建您的专属拼豆图纸。</p>
+             <p style="color: var(--text-secondary); font-size: 1.1rem; padding: 20px;">请上传图片以开始创建您的专属拼豆图纸。</p>
         </div>
     </main>
 </div>
@@ -1098,34 +1118,6 @@ function activateApp() {
             errorDiv.style.display = 'none';
         }, 3000);
     }
-}
-
-// 绑定激活按钮点击事件
-document.addEventListener('DOMContentLoaded', function() {
-    const activateBtn = document.getElementById('activate-btn');
-    if (activateBtn) {
-        activateBtn.onclick = activateApp;
-    }
-    
-    // 绑定回车键
-    const activationInput = document.getElementById('activation-code');
-    if (activationInput) {
-        activationInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                activateApp();
-            }
-        });
-        
-        // 自动聚焦
-        activationInput.focus();
-    }
-});
-
-// 检查是否已经激活
-if (sessionStorage.getItem('activated') === 'true') {
-    console.log('用户已激活，直接进入主应用');
-    document.getElementById('activation-screen').style.display = 'none';
-    document.getElementById('app-container').style.display = 'grid';
 }
 
 // --- Data & Configuration (Five Brand Palettes) ---
@@ -1229,14 +1221,14 @@ const MANMAN_COLORS = {
     "D2": "#A0E2FB", "D3": "#41CCFF", "D7": "#01ACEB", "D4": "#50AAF0", "D9": "#0F54C0", 
     "N5": "#324BCA", "D25": "#3EBCE2", "D28": "#28DDDE", "D26": "#1C334D", "D30": "#CDE8FF", 
     "D29": "#D5FDFF", "D31": "#22C4C6", "D32": "#1557A8", "D36": "#04D1F6", "DH6": "#1D3344", 
-    "DH9": "#1887A2", "DH14": "#176DAF", "IC3": "#BEDDFF", "Q11": "#67B4BE", "R13": "#C8E2FF", 
-    "R14": "#7CC4FF", "R12": "#A9E5E5", "R15": "#3CAED8", "G13": "#D3DFFA", "G14": "#BBCFED", 
-    "G15": "#34488E", "D5": "#AEB4F2", "D6": "#858EDD", "D10": "#2F54AF", "D11": "#182A84", 
-    "D13": "#B843C5", "D14": "#AC7BDE", "D16": "#8854B3", "D17": "#E2D3FF", "D19": "#D5B9F8", 
-    "D15": "#361B51", "D20": "#B9BAE1", "D21": "#DE9AD4", "D22": "#B90095", "D23": "#8B279B", 
-    "D24": "#2F1F90", "D18": "#E3E1EE", "D27": "#C4D4F6", "D33": "#A45EC7", "D34": "#D8C3D7", 
-    "D35": "#9C32B2", "DH1": "#9A009B", "DH8": "#333A95", "IC8": "#EBDAFC", "Q14": "#7786E5", 
-    "Q15": "#494FC7", "R01": "#DFC2F8", "E1": "#FDD3CC", "E9": "#FEC0DF", "E10": "#FFB7E7", 
+    "DH9": "#1887A2", "DH14": "#176DAF", "IC3": "#BEDDFF", "Q11": "#67B4BE", 
+    "R13": "#C8E2FF", "R14": "#7CC4FF", "R12": "#A9E5E5", "R15": "#3CAED8", "G13": "#D3DFFA", 
+    "G14": "#BBCFED", "G15": "#34488E", "D5": "#AEB4F2", "D6": "#858EDD", "D10": "#2F54AF", 
+    "D11": "#182A84", "D13": "#B843C5", "D14": "#AC7BDE", "D16": "#8854B3", "D17": "#E2D3FF", 
+    "D19": "#D5B9F8", "D15": "#361B51", "D20": "#B9BAE1", "D21": "#DE9AD4", "D22": "#B90095", 
+    "D23": "#8B279B", "D24": "#2F1F90", "D18": "#E3E1EE", "D27": "#C4D4F6", "D33": "#A45EC7", 
+    "D34": "#D8C3D7", "D35": "#9C32B2", "DH1": "#9A009B", "DH8": "#333A95", "IC8": "#EBDAFC", 
+    "Q14": "#7786E5", "Q15": "#494FC7", "R01": "#DFC2F8", "E1": "#FDD3CC", "E9": "#FEC0DF", "E10": "#FFB7E7", 
     "E21": "#E8649E", "E15": "#F551A2", "E16": "#F13D74", "E17": "#C63478", "E18": "#FFDBE9", 
     "E19": "#E970CC", "E20": "#D33793", "E23": "#FCDDD2", "E24": "#F78FC3", "E25": "#B5006D", 
     "E26": "#FFD1BA", "E27": "#F8C7C9", "E28": "#FFF3EB", "E29": "#FFE2EA", "E30": "#FFC7DB", 
@@ -1249,9 +1241,9 @@ const MANMAN_COLORS = {
     "A25": "#E54B4F", "E3": "#FFE2CE", "E4": "#FFC4AA", "E5": "#F4C3A5", "E6": "#E1B383", 
     "E7": "#EDB045", "E8": "#E99C17", "E9": "#9D5B3E", "E10": "#753B32", "E12": "#E6B483", 
     "E13": "#D98C39", "E14": "#E0C593", "E15": "#FFC890", "E16": "#B7714A", "E17": "#8D614C", 
-    "E18": "#FCF9E0", "E19": "#F2D9BA", "E20": "#7B524B", "E21": "#FFE4CC", "E22": "#E07935", 
-    "E23": "#A94023", "E24": "#B88558", "F1": "#FDFBFF", "F2": "#FEFFFF", "F3": "#B6B1BA", 
-    "F4": "#89858C", "F5": "#48464E", "F6": "#2F2B2F", "F7": "#000000", "F8": "#E7D6DB", 
+    "E18": "#FCF9E0", "E19": "#F2D9BA", "E20": "#7B524B", "E21": "#FFE4CC", 
+    "E22": "#E07935", "E23": "#A94023", "E24": "#B88558", "F1": "#FDFBFF", "F2": "#FEFFFF", 
+    "F3": "#B6B1BA", "F4": "#89858C", "F5": "#48464E", "F6": "#2F2B2F", "F7": "#000000", "F8": "#E7D6DB", 
     "F9": "#EDEDED", "F10": "#EEE9EA", "F11": "#CECDD5", "F12": "#FFF5ED", "F13": "#F5ECD2", 
     "F14": "#CFD7D3", "F15": "#98A6A8", "F16": "#1D1414", "F17": "#F1EDED", "F18": "#FFFDF0", 
     "F19": "#F6EFE2", "F20": "#949FA3", "F21": "#FFFBE1", "F22": "#CACAD4", "F23": "#9A9D94", 
@@ -1262,16 +1254,18 @@ const MANMAN_COLORS = {
     "P8": "#5FD0A7", "P6": "#EB9270", "P7": "#F0D958", "P13": "#D9D9D9", "P18": "#D9C7EA", 
     "P9": "#F3ECC9", "P12": "#E6EEF2", "P17": "#AACBEF", "P22": "#3376B0", "P23": "#668575", 
     "P14": "#FEBF45", "P19": "#FEA324", "P11": "#FEB89F", "P10": "#FFE0E9", "P15": "#FEBECF", 
-    "P20": "#ECBEBF", "P16": "#E4A89F", "P21": "#A56268", "W3": "#F2A5E8", "W4": "#E9EC91", 
-    "W1": "#FFFF00", "W2": "#FFEBFA", "W5": "#76CEDE", "T1": "#D50D21", "N1": "#F92F83", 
+    "P20": "#ECBEBF", "P16": "#E4A89F", "P21": "#A56268", "W3": "#F2A5E8", 
+    "W4": "#E9EC91", "W1": "#FFFF00", "W2": "#FFEBFA", "W5": "#76CEDE", "T1": "#D50D21", 
+    "N1": "#F92F83", 
     "N2": "#FD8324", "N3": "#F8EC31", "N4": "#35C75B", "T4": "#23B891", "T5": "#19779D", 
     "T3": "#1A60C3", "T2": "#9A56B4", "T6": "#FFDB4C", "L2": "#FFEBFA", "L6": "#D8D5CE", 
-    "L7": "#55514C", "S1": "#9FE4DF", "S5": "#77CEE9", "S4": "#3ECFCA", "S11": "#4A867A", 
-    "S13": "#7FCD9D", "S6": "#CDE55D", "S8": "#E8C7B4", "S15": "#AD6F3C", "S12": "#6C372F", 
-    "S14": "#FEB872", "S9": "#F3C1C0", "S4": "#C9675E", "S11": "#D293BE", "S8": "#EA8CB1", 
-    "S10": "#9C87D6", "L6": "#FFFFFF", "Y1": "#FD6FB4", "Y2": "#F24B94", "Y3": "#D7FAA0", 
-    "Y4": "#8BDBFA", "Y5": "#E987EA", "ZG1": "#DAABB3", "ZG2": "#D6AA87", "ZG3": "#C1BD8D", 
-    "ZG4": "#96B69F", "ZG5": "#849DC6", "ZG6": "#94BFE2", "ZG7": "#E2A9D2", "ZG8": "#AB91C0"
+    "L7": "#55514C", "S1": "#9FE4DF", "S5": "#77CEE9", "S4": "#3ECFCA", 
+    "S11": "#4A867A", "S13": "#7FCD9D", "S6": "#CDE55D", "S8": "#E8C7B4", "S15": "#AD6F3C", 
+    "S12": "#6C372F", "S14": "#FEB872", "S9": "#F3C1C0", "S4": "#C9675E", "S11": "#D293BE", 
+    "S8": "#EA8CB1", "S10": "#9C87D6", "L6": "#FFFFFF", "Y1": "#FD6FB4", "Y2": "#F24B94", 
+    "Y3": "#D7FAA0", "Y4": "#8BDBFA", "Y5": "#E987EA", "ZG1": "#DAABB3", "ZG2": "#D6AA87", 
+    "ZG3": "#C1BD8D", "ZG4": "#96B69F", "ZG5": "#849DC6", "ZG6": "#94BFE2", "ZG7": "#E2A9D2", 
+    "ZG8": "#AB91C0"
 };
 
 // 盼盼色板
@@ -1423,13 +1417,10 @@ const MARD_COLOR_PRESETS = {
     '入门10色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1'],
     '标准20色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4'],
     '进阶30色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4', 'A1','B2','C4','D7','E2','F4','G2','M1','R2'],
-    '专业50色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4', 'A1','B2','C4','D7','E2','F4','G2','M1','R2', 'A2','B3','C6','D8','E4','F6','G3','M2','R3','P2','A3','B4','C7','D9','E5','F7','G4','M3','R4','P4'],
+    '专业50色': ['H7', 'A6', 'B1', 'C3', 'D6', 'E3', 'F5', 'G1', 'H17', 'R1', 'A13', 'B5', 'C5', 'D9', 'E9', 'F13', 'P1', 'Y1', 'Y4', 'A1','B2','C4','D7','E2','F4','G2','M1','R2', 'A2','B3','C6','D8','E4','F6','G3','M2','R3','P2','A3','B4','C7','D9','E5','F7','G4','M3','R3','P3'],
     '大师100色': Array.from({length: 100}, (_, i) => ALL_COLOR_KEYS.MARD[i % ALL_COLOR_KEYS.MARD.length]),
     '全色系291色': ALL_COLOR_KEYS.MARD
 };
-
-// Background colors to be removed
-const BACKGROUND_COLOR_KEYS = ['T1', 'H1', 'H2'];
 
 // --- DOM Elements ---
 const sidebar = document.getElementById('sidebar'); 
@@ -1456,7 +1447,6 @@ const clearHighlightBtn = document.getElementById('clear-highlight-btn');
 const showGridCheckbox = document.getElementById('show-grid'); 
 const showCoordsCheckbox = document.getElementById('show-coords'); 
 const showColorsCheckbox = document.getElementById('show-colors');
-const showBackgroundCheckbox = document.getElementById('show-background');
 const workspace = document.getElementById('workspace'); 
 const tooltip = document.getElementById('tooltip'); 
 const mobileCoords = document.getElementById('mobile-coords');
@@ -1467,7 +1457,6 @@ const granularitySlider = document.getElementById('granularity-slider');
 const granularityDisplay = document.getElementById('granularity-display');
 const similarityThresholdSlider = document.getElementById('similarity-threshold');
 const thresholdDisplay = document.getElementById('threshold-display');
-const excludedColorsDiv = document.getElementById('excluded-colors');
 const progressContainer = document.getElementById('progress-container');
 const progressFill = document.getElementById('progress-fill');
 const progressText = document.getElementById('progress-text');
@@ -1485,31 +1474,33 @@ const lineStrengthValue = document.getElementById('lineStrengthValue');
 // --- State Management ---
 let state = {
     originalImage: null,
-    currentBrand: 'MARD', // 默认选择MARD品牌
+    currentBrand: 'MARD',
     activePalette: MARD_COLOR_PRESETS['全色系291色'],
     customPalette: new Set(),
-    excludedColors: new Set(),
-    colorData: [], // 2D array of color codes
-    initialMappedData: [], // Initial mapping data
-    mergedData: [], // Data after region merging
-    externalBackground: [], // Background cells marked as external
+    colorData: [],
+    initialMappedData: [],
+    mergedData: [],
     colorCounts: {},
     highlightedColor: null,
     hiddenColors: new Set(),
     selectedColor: null,
-    selectedCell: null, // {x, y, color} for color replacement
+    selectedCell: null,
     zoomLevel: 100,
     showGrid: true,
     showCoords: true,
     showColors: true,
-    showBackground: true,
     similarityThreshold: 30,
     granularity: 64,
     processingMode: '未处理',
     mergedRegions: 0,
     backgroundRemoved: '未执行',
     lineEnhance: false,
-    lineStrength: 3
+    lineStrength: 3,
+    // 新增状态来跟踪DOM结构
+    canvasInitialized: false,
+    currentViewport: null,
+    currentCanvas: null,
+    currentContainer: null
 };
 
 // --- Core Algorithms ---
@@ -1773,84 +1764,6 @@ const mergeSimilarRegions = (data, width, height, threshold) => {
     return { result, regionCount };
 };
 
-// Flood fill for background removal
-const removeBackground = (data, width, height) => {
-    const isExternal = Array(height).fill(null).map(() => Array(width).fill(false));
-    const visited = Array(height).fill(null).map(() => Array(width).fill(false));
-    
-    // Start from all boundary cells
-    const queue = [];
-    
-    // Add all boundary cells
-    for (let x = 0; x < width; x++) {
-        queue.push([x, 0]);
-        queue.push([x, height - 1]);
-    }
-    for (let y = 1; y < height - 1; y++) {
-        queue.push([0, y]);
-        queue.push([width - 1, y]);
-    }
-    
-    const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-    
-    while (queue.length > 0) {
-        const [cx, cy] = queue.shift();
-        
-        if (visited[cy][cx]) continue;
-        visited[cy][cx] = true;
-        
-        const color = data[cy][cx];
-        
-        // Check if this is a background color
-        if (BACKGROUND_COLOR_KEYS.includes(color)) {
-            isExternal[cy][cx] = true;
-            
-            // Add adjacent cells to queue
-            for (const [dx, dy] of directions) {
-                const nx = cx + dx;
-                const ny = cy + dy;
-                
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[ny][nx]) {
-                    queue.push([nx, ny]);
-                }
-            }
-        }
-    }
-    
-    return isExternal;
-};
-
-// Remap excluded colors
-const remapExcludedColors = (data, excludedColors, availableColors) => {
-    if (excludedColors.size === 0) return data;
-    
-    const result = data.map(row => [...row]);
-    
-    for (const excludedColor of excludedColors) {
-        const targetPalette = availableColors.filter(color => !excludedColors.has(color));
-        
-        if (targetPalette.length === 0) {
-            console.warn('No available colors after exclusion');
-            continue;
-        }
-        
-        for (let y = 0; y < result.length; y++) {
-            for (let x = 0; x < result[y].length; x++) {
-                if (result[y][x] === excludedColor) {
-                    // Find closest color from target palette
-                    const excludedRgb = hexToRgb(BRAND_COLORS[state.currentBrand][excludedColor]);
-                    const newColor = findClosestColor(excludedRgb, targetPalette);
-                    if (newColor) {
-                        result[y][x] = newColor;
-                    }
-                }
-            }
-        }
-    }
-    
-    return result;
-};
-
 // --- Main Processing Pipeline ---
 
 // Step 1: Initial Color Mapping with Max Pooling
@@ -1907,27 +1820,6 @@ const performRegionMerging = (data) => {
     
     console.log(`区域合并完成，合并了 ${regionCount} 个区域`);
     return result;
-};
-
-// Step 3: Background Removal
-const performBackgroundRemoval = (data) => {
-    const isExternal = removeBackground(data, data[0].length, data.length);
-    
-    state.processingMode = '背景移除';
-    state.backgroundRemoved = `${isExternal.flat().filter(x => x).length}个单元格`;
-    updateStatus();
-    
-    console.log(`背景移除完成，标记了 ${isExternal.flat().filter(x => x).length} 个背景单元格`);
-    return isExternal;
-};
-
-// Step 4: Color Exclusion and Remapping
-const performColorExclusion = (data, excludedColors) => {
-    if (excludedColors.size === 0) return data;
-    
-    const availableColors = state.activePalette.filter(color => !excludedColors.has(color));
-    console.log(`颜色排除处理，排除颜色数: ${excludedColors.size}, 可用颜色数: ${availableColors.length}`);
-    return remapExcludedColors(data, excludedColors, availableColors);
 };
 
 // Complete processing pipeline
@@ -2015,46 +1907,23 @@ const processImage = async () => {
             throw new Error(`区域颜色合并失败: ${error.message}`);
         }
         
-        // Step 3: Background Removal
-        progressFill.style.width = '75%';
-        progressText.textContent = '步骤3: 背景移除...';
-        
-        try {
-            state.externalBackground = performBackgroundRemoval(state.mergedData);
-            
-            // 验证背景移除结果
-            if (!state.externalBackground || state.externalBackground.length === 0) {
-                throw new Error('背景移除失败');
-            }
-        } catch (error) {
-            console.error('背景移除出错:', error);
-            throw new Error(`背景移除失败: ${error.message}`);
-        }
-        
-        // Step 4: Color Exclusion
+        // Final data
         progressFill.style.width = '90%';
-        progressText.textContent = '步骤4: 颜色排除处理...';
+        progressText.textContent = '生成最终数据...';
         
-        try {
-            state.colorData = performColorExclusion(state.mergedData, state.excludedColors);
-            
-            // 验证颜色排除结果
-            if (!state.colorData || state.colorData.length === 0) {
-                throw new Error('颜色排除处理失败');
-            }
-        } catch (error) {
-            console.error('颜色排除处理出错:', error);
-            throw new Error(`颜色排除处理失败: ${error.message}`);
+        state.colorData = state.mergedData;
+        
+        // 验证颜色数据
+        if (!state.colorData || state.colorData.length === 0) {
+            throw new Error('最终数据生成失败');
         }
         
         // Update color counts
         state.colorCounts = {};
         for (let y = 0; y < state.colorData.length; y++) {
             for (let x = 0; x < state.colorData[y].length; x++) {
-                if (!state.externalBackground[y][x]) {
-                    const key = state.colorData[y][x];
-                    state.colorCounts[key] = (state.colorCounts[key] || 0) + 1;
-                }
+                const key = state.colorData[y][x];
+                state.colorCounts[key] = (state.colorCounts[key] || 0) + 1;
             }
         }
         
@@ -2067,7 +1936,9 @@ const processImage = async () => {
             progressContainer.style.display = 'none';
         }, 1000);
         
-        renderCanvas();
+        // 初始化或重新初始化画布
+        initializeCanvas();
+        renderCanvasContent();
         renderShoppingList();
         
     } catch (error) {
@@ -2080,21 +1951,63 @@ const processImage = async () => {
     }
 };
 
-// --- Rendering Functions ---
+// --- Canvas Management ---
 
-const renderCanvas = () => {
+// 初始化画布结构 - 只在第一次或重新生成图纸时调用
+const initializeCanvas = () => {
+    const workspace = document.getElementById('workspace');
+    
+    // 清空工作区
+    workspace.innerHTML = '';
+    
+    // 创建视口容器
+    const viewportContainer = document.createElement('div');
+    viewportContainer.className = 'canvas-viewport';
+    state.currentViewport = viewportContainer;
+    
+    // 创建画布容器
+    const container = document.createElement('div'); 
+    container.className = 'canvas-container';
+    state.currentContainer = container;
+    
+    // 创建画布
+    const canvas = document.createElement('canvas');
+    canvas.id = 'pattern-canvas';
+    state.currentCanvas = canvas;
+    
+    container.appendChild(canvas);
+    viewportContainer.appendChild(container);
+    workspace.appendChild(viewportContainer);
+    
+    state.canvasInitialized = true;
+    
+    // 应用缩放
+    const scale = state.zoomLevel / 100;
+    container.style.transform = `scale(${scale})`;
+    
+    // 绑定事件监听器
+    attachCanvasListeners(canvas);
+    
+    console.log('画布结构初始化完成');
+};
+
+// 只渲染画布内容，不重新创建DOM结构
+const renderCanvasContent = () => {
     if (!state.colorData || state.colorData.length === 0) {
         console.log('没有颜色数据可以渲染');
         return;
     }
     
-    const canvas = document.getElementById('pattern-canvas') || document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.id = 'pattern-canvas';
+    if (!state.canvasInitialized || !state.currentCanvas) {
+        console.error('画布未初始化');
+        return;
+    }
     
-    const scale = state.zoomLevel / 100;
+    const canvas = state.currentCanvas;
+    const ctx = canvas.getContext('2d');
+    
     const baseCellSize = 25;
-    const cellSize = baseCellSize * scale;
+    const cellSize = baseCellSize;
     
     // Calculate actual content boundaries
     let minX = state.colorData[0].length;
@@ -2108,12 +2021,10 @@ const renderCanvas = () => {
             if (!key) continue;
             
             // Only non-background colors count for boundaries
-            if (!(state.externalBackground[y] && state.externalBackground[y][x])) {
-                minX = Math.min(minX, x);
-                maxX = Math.max(maxX, x);
-                minY = Math.min(minY, y);
-                maxY = Math.max(maxY, y);
-            }
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
         }
     }
     
@@ -2129,7 +2040,7 @@ const renderCanvas = () => {
     const coordSize = state.showCoords ? 50 : 20;
     const padding = state.showCoords ? 80 : 30;
     
-    // Set canvas size based on actual content area
+    // Set canvas size based on actual content area (基础尺寸，不应用缩放)
     canvas.width = actualWidth * cellSize + padding;
     canvas.height = actualHeight * cellSize + padding;
     
@@ -2137,15 +2048,9 @@ const renderCanvas = () => {
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    workspace.innerHTML = ''; 
-    const container = document.createElement('div'); 
-    container.className = 'canvas-container'; 
-    container.appendChild(canvas); 
-    workspace.appendChild(container);
-
     // Draw coordinate labels
     if (state.showCoords) {
-        ctx.font = `bold ${Math.max(14, 14 * scale)}px Arial`; 
+        ctx.font = `bold ${14}px Arial`; 
         ctx.textAlign = 'center'; 
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#333';
@@ -2185,17 +2090,8 @@ const renderCanvas = () => {
                 continue;
             }
             
-            // Skip external background if not showing background
-            if (!state.showBackground && state.externalBackground[y] && state.externalBackground[y][x]) {
-                continue;
-            }
-            
             // Draw bead
-            if (state.externalBackground[y] && state.externalBackground[y][x]) {
-                ctx.fillStyle = '#f0f0f0';
-            } else {
-                ctx.fillStyle = BRAND_COLORS[state.currentBrand][key];
-            }
+            ctx.fillStyle = BRAND_COLORS[state.currentBrand][key];
             ctx.fillRect(px, py, cellSize, cellSize);
             
             // Draw grid
@@ -2216,12 +2112,12 @@ const renderCanvas = () => {
             }
             
             // Draw color code
-            if (state.showColors && !(state.externalBackground[y] && state.externalBackground[y][x])) {
+            if (state.showColors) {
                 const rgb = hexToRgb(BRAND_COLORS[state.currentBrand][key]);
                 const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
                 ctx.fillStyle = brightness > 140 ? '#000' : '#fff';
                 
-                const fontSize = Math.min(cellSize * 0.4, 18 * scale);
+                const fontSize = Math.min(cellSize * 0.4, 18);
                 ctx.font = `bold ${fontSize}px Arial`;
                 ctx.textAlign = 'center'; 
                 ctx.textBaseline = 'middle';
@@ -2236,8 +2132,21 @@ const renderCanvas = () => {
     canvas.dataset.minX = minX;
     canvas.dataset.minY = minY;
     
-    attachCanvasListeners(canvas, cellSize, offsetX, offsetY, minX, minY);
+    // 重新绑定事件监听器以使用新的边界数据
+    attachCanvasListeners(canvas, cellSize * (state.zoomLevel / 100), offsetX * (state.zoomLevel / 100), offsetY * (state.zoomLevel / 100), minX, minY);
+    
+    console.log('画布内容渲染完成');
 };
+
+// 兼容函数 - 为了向后兼容保留
+const renderCanvas = () => {
+    if (!state.canvasInitialized) {
+        initializeCanvas();
+    }
+    renderCanvasContent();
+};
+
+// --- Rendering Functions ---
 
 const renderShoppingList = () => {
     listItems.innerHTML = '';
@@ -2277,14 +2186,20 @@ const showCoordinateInfo = (colorKey, x, y) => {
     
     setTimeout(() => {
         display.style.display = 'none';
-    }, 5000);
+    },5000);
 };
 
 const attachCanvasListeners = (canvas, cellSize, offsetX, offsetY, minX, minY) => {
     canvas.onmousemove = (e) => {
         const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left - offsetX) / cellSize) + minX;
-        const y = Math.floor((e.clientY - rect.top - offsetY) / cellSize) + minY;
+        // 考虑缩放因子
+        const scale = state.zoomLevel / 100;
+        const adjustedCellSize = cellSize / scale;
+        const adjustedOffsetX = offsetX / scale;
+        const adjustedOffsetY = offsetY / scale;
+        
+        const x = Math.floor((e.clientX - rect.left - adjustedOffsetX) / adjustedCellSize) + minX;
+        const y = Math.floor((e.clientY - rect.top - adjustedOffsetY) / adjustedCellSize) + minY;
         if (state.colorData[y] && state.colorData[y][x] && x >= 0 && y >= 0) {
             const key = state.colorData[y][x];
             if (key) {
@@ -2303,13 +2218,22 @@ const attachCanvasListeners = (canvas, cellSize, offsetX, offsetY, minX, minY) =
             tooltip.style.display = 'none'; 
         }
     };
+    
     canvas.onmouseleave = () => { 
         tooltip.style.display = 'none'; 
     };
+    
     canvas.onclick = (e) => {
         const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left - offsetX) / cellSize) + minX;
-        const y = Math.floor((e.clientY - rect.top - offsetY) / cellSize) + minY;
+        // 考虑缩放因子
+        const scale = state.zoomLevel / 100;
+        const adjustedCellSize = cellSize / scale;
+        const adjustedOffsetX = offsetX / scale;
+        const adjustedOffsetY = offsetY / scale;
+        
+        const x = Math.floor((e.clientX - rect.left - adjustedOffsetX) / adjustedCellSize) + minX;
+        const y = Math.floor((e.clientY - rect.top - adjustedOffsetY) / adjustedCellSize) + minY;
+        
         if (state.colorData[y] && state.colorData[y][x] && x >= 0 && y >= 0) {
             state.selectedColor = state.colorData[y][x];
             state.selectedCell = { x, y, color: state.colorData[y][x] };
@@ -2362,7 +2286,8 @@ const showColorPicker = () => {
                     delete state.colorCounts[oldColor];
                 }
                 
-                renderCanvas();
+                // 只重新渲染画布内容，不重建结构
+                renderCanvasContent();
                 renderShoppingList();
                 colorPickerModal.style.display = 'none';
             }
@@ -2389,7 +2314,7 @@ const initializeUI = () => {
         btn.textContent = brand;
         btn.onclick = () => { 
             state.currentBrand = brand;
-            state.activePalette = ALL_COLOR_KEYS[brand]; // 默认使用全色系
+            state.activePalette = ALL_COLOR_KEYS[brand];
             document.querySelectorAll('.brand-btn').forEach(b=>b.classList.remove('active')); 
             btn.classList.add('active');
             
@@ -2475,35 +2400,6 @@ const renderCustomColorGrid = () => {
     });
 };
 
-const updateExcludedColorsDisplay = () => {
-    const excludedColorsDiv = document.getElementById('excluded-colors');
-    excludedColorsDiv.innerHTML = '';
-    state.excludedColors.forEach(colorKey => {
-        const item = document.createElement('div');
-        item.className = 'excluded-color-item';
-        item.innerHTML = `
-            <div class="excluded-color-swatch" style="background:${BRAND_COLORS[state.currentBrand][colorKey]}"></div>
-            <span>${colorKey}</span>
-            <span class="remove-exclusion" data-color="${colorKey}">✕</span>
-        `;
-        excludedColorsDiv.appendChild(item);
-    });
-    
-    // Add click handlers for removal buttons
-    excludedColorsDiv.querySelectorAll('.remove-exclusion').forEach(btn => {
-        btn.onclick = () => {
-            const colorKey = btn.dataset.color;
-            state.excludedColors.delete(colorKey);
-            updateExcludedColorsDisplay();
-            
-            // Reprocess if we have data
-            if (state.colorData.length > 0) {
-                processImage();
-            }
-        };
-    });
-};
-
 // --- Event Listeners ---
 uploadArea.onclick = () => fileInput.click();
 uploadArea.ondragover = (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); };
@@ -2536,6 +2432,9 @@ const handleFile = (file) => {
         img.onload = () => { 
             console.log('图片加载成功，尺寸:', img.width, 'x', img.height);
             state.originalImage = img;
+            
+            // 重置画布状态，因为要处理新图片
+            state.canvasInitialized = false;
             
             // Auto update dimensions based on aspect ratio
             if (img.width && img.height) {
@@ -2591,39 +2490,81 @@ similarityThresholdSlider.oninput = (e) => {
     }
 };
 
-// Zoom controls
+// Zoom controls - 修复缩放功能
 zoomInBtn.onclick = () => {
     state.zoomLevel = Math.min(300, state.zoomLevel + 10);
     zoomValue.textContent = state.zoomLevel + '%';
-    renderCanvas();
+    if (state.currentContainer) {
+        const scale = state.zoomLevel / 100;
+        state.currentContainer.style.transform = `scale(${scale})`;
+        
+        // 重新绑定事件监听器以使用新的缩放参数
+        if (state.currentCanvas) {
+            const cellSize = 25 * scale;
+            const offsetX = (state.showCoords ? 40 : 15) * scale;
+            const offsetY = (state.showCoords ? 40 : 15) * scale;
+            const minX = parseInt(state.currentCanvas.dataset.minX) || 0;
+            const minY = parseInt(state.currentCanvas.dataset.minY) || 0;
+            
+            attachCanvasListeners(state.currentCanvas, cellSize * (state.zoomLevel / 100), offsetX * (state.zoomLevel / 100), offsetY * (state.zoomLevel / 100), minX, minY);
+        }
+    }
 };
+
 zoomOutBtn.onclick = () => {
     state.zoomLevel = Math.max(50, state.zoomLevel - 10);
     zoomValue.textContent = state.zoomLevel + '%';
-    renderCanvas();
+    if (state.currentContainer) {
+        const scale = state.zoomLevel / 100;
+        state.currentContainer.style.transform = `scale(${scale})`;
+        
+        // 重新绑定事件监听器以使用新的缩放参数
+        if (state.currentCanvas) {
+            const cellSize = 25 * scale;
+            const offsetX = (state.showCoords ? 40 : 15) * scale;
+            const offsetY = (state.showCoords ? 40 : 15) * scale;
+            const minX = parseInt(state.currentCanvas.dataset.minX) || 0;
+            const minY = parseInt(state.currentCanvas.dataset.minY) || 0;
+            
+            attachCanvasListeners(state.currentCanvas, cellSize * (state.zoomLevel / 100), offsetX * (state.zoomLevel / 100), offsetY * (state.zoomLevel / 100), minX, minY);
+        }
+    }
 };
+
 zoomResetBtn.onclick = () => {
     state.zoomLevel = 100;
     zoomValue.textContent = state.zoomLevel + '%';
-    renderCanvas();
+    if (state.currentContainer) {
+        state.currentContainer.style.transform = 'scale(1)';
+        
+        // 重新绑定事件监听器以使用新的缩放参数
+        if (state.currentCanvas) {
+            const cellSize = 25;
+            const offsetX = (state.showCoords ? 40 : 15);
+            const offsetY = (state.showCoords ? 40 : 15);
+            const minX = parseInt(state.currentCanvas.dataset.minX) || 0;
+            const minY = parseInt(state.currentCanvas.dataset.minY) || 0;
+            
+            attachCanvasListeners(state.currentCanvas, cellSize, offsetX, offsetY, minX, minY);
+        }
+    }
 };
 
-// Display controls
+// Display controls - 修复显示选项不会重置画布
 showGridCheckbox.onchange = (e) => {
     state.showGrid = e.target.checked;
-    renderCanvas();
+    // 只重新渲染内容，不重建结构
+    renderCanvasContent();
 };
 showCoordsCheckbox.onchange = (e) => {
     state.showCoords = e.target.checked;
-    renderCanvas();
+    // 只重新渲染内容，不重建结构
+    renderCanvasContent();
 };
 showColorsCheckbox.onchange = (e) => {
     state.showColors = e.target.checked;
-    renderCanvas();
-};
-showBackgroundCheckbox.onchange = (e) => {
-    state.showBackground = e.target.checked;
-    renderCanvas();
+    // 只重新渲染内容，不重建结构
+    renderCanvasContent();
 };
 
 // Color manipulation buttons
@@ -2639,7 +2580,8 @@ highlightBtn.onclick = () => {
             highlightBtn.classList.add('active');
         }
         console.log('高亮颜色:', state.highlightedColor);
-        renderCanvas();
+        // 只重新渲染内容，不重建结构
+        renderCanvasContent();
     } else {
         alert('请先点击一个珠子选择颜色');
     }
@@ -2657,7 +2599,8 @@ hideBtn.onclick = () => {
             hideBtn.classList.add('active');
         }
         console.log('隐藏的颜色:', Array.from(state.hiddenColors));
-        renderCanvas();
+        // 只重新渲染内容，不重建结构
+        renderCanvasContent();
     } else {
         alert('请先点击一个珠子选择颜色');
     }
@@ -2670,7 +2613,8 @@ clearHighlightBtn.onclick = () => {
     highlightBtn.classList.remove('active');
     hideBtn.classList.remove('active');
     console.log('清除所有高亮和隐藏');
-    renderCanvas();
+    // 只重新渲染内容，不重建结构
+    renderCanvasContent();
 };
 
 toggleListBtn.onclick = () => shoppingList.classList.toggle('visible');
@@ -2730,13 +2674,11 @@ const downloadPattern = () => {
                 const key = state.colorData[y][x];
                 if (!key) continue;
                 
-                // 只有非背景颜色计入边界
-                if (!(state.externalBackground[y] && state.externalBackground[y][x])) {
-                    minX = Math.min(minX, x);
-                    maxX = Math.max(maxX, x);
-                    minY = Math.min(minY, y);
-                    maxY = Math.max(maxY, y);
-                }
+                // 计算边界
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
             }
         }
         
@@ -2811,20 +2753,13 @@ const downloadPattern = () => {
                     continue;
                 }
                 
-                // 跳过外部背景（如果不显示背景）
-                if (!state.showBackground && state.externalBackground[y] && state.externalBackground[y][x]) continue;
-                
                 // 绘制珠子
-                if (state.externalBackground[y] && state.externalBackground[y][x]) {
-                    ctx.fillStyle = '#f0f0f0';
+                const color = BRAND_COLORS[state.currentBrand][key];
+                if (!color) {
+                    console.warn(`颜色 ${key} 在品牌 ${state.currentBrand} 中不存在，使用默认颜色`);
+                    ctx.fillStyle = '#ccc';
                 } else {
-                    const color = BRAND_COLORS[state.currentBrand][key];
-                    if (!color) {
-                        console.warn(`颜色 ${key} 在品牌 ${state.currentBrand} 中不存在，使用默认颜色`);
-                        ctx.fillStyle = '#ccc';
-                    } else {
-                        ctx.fillStyle = color;
-                    }
+                    ctx.fillStyle = color;
                 }
                 ctx.fillRect(px, py, hdCellSize, hdCellSize);
                 
@@ -2846,7 +2781,7 @@ const downloadPattern = () => {
                 }
                 
                 // 绘制色号
-                if (state.showColors && !(state.externalBackground[y] && state.externalBackground[y][x]) && !state.hiddenColors.has(key)) {
+                if (state.showColors && !state.hiddenColors.has(key)) {
                     const rgb = hexToRgb(BRAND_COLORS[state.currentBrand][key]);
                     const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
                     ctx.fillStyle = brightness > 140 ? '#000' : '#fff';
@@ -3009,22 +2944,39 @@ const checkMobile = () => {
 window.addEventListener('resize', checkMobile); 
 checkMobile();
 
-// --- Color exclusion from canvas clicks ---
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Delete' && state.selectedColor && state.colorData.length > 0) {
-        // Add selected color to exclusion list
-        state.excludedColors.add(state.selectedColor);
-        updateExcludedColorsDisplay();
-        
-        // Reprocess image
-        processImage();
-    }
-});
-
 // --- Init ---
+// 统一在页面加载完成后初始化所有功能
 document.addEventListener('DOMContentLoaded', function() {
+    // 检查是否已经激活
+    if (sessionStorage.getItem('activated') === 'true') {
+        console.log('用户已激活，直接进入主应用');
+        document.getElementById('activation-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'grid';
+    }
+    
+    // 绑定激活按钮点击事件
+    const activateBtn = document.getElementById('activate-btn');
+    if (activateBtn) {
+        activateBtn.onclick = activateApp;
+    }
+    
+    // 绑定回车键
+    const activationInput = document.getElementById('activation-code');
+    if (activationInput) {
+        activationInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                activateApp();
+            }
+        });
+        
+        // 自动聚焦
+        activationInput.focus();
+    }
+    
+    // 初始化UI
     initializeUI();
-    // 修复：绑定下载按钮事件
+    
+    // 绑定下载按钮事件
     downloadBtn.onclick = downloadPattern;
 });
 </script>
@@ -3032,5 +2984,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </body>
 </html>
 
-```
 
